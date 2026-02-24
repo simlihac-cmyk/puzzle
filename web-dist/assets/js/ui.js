@@ -4,6 +4,7 @@
   timer: document.getElementById("timer"),
   leaderboard: document.getElementById("leaderboard"),
   userId: document.getElementById("userId"),
+  difficulty: document.getElementById("difficulty"),
   loadSudoku: document.getElementById("loadSudoku"),
   loadPicross: document.getElementById("loadPicross"),
   submit: document.getElementById("submitBtn"),

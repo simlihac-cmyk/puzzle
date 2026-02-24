@@ -1,11 +1,11 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Puzzle Hub</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="stylesheet" href="/assets/css/styles.css?v=20260224-10" />
+    <link rel="stylesheet" href="/assets/css/styles.css?v=20260224-11" />
   </head>
   <body>
     <div class="wrap">
@@ -17,6 +17,11 @@
       <div class="panel">
         <div class="row">
           <input id="userId" placeholder="user id" value="guest" />
+          <select id="difficulty" aria-label="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
           <button id="loadSudoku">Today Sudoku</button>
           <button id="loadPicross">Today Picross</button>
           <button class="secondary" id="submitBtn">Submit</button>
@@ -35,6 +40,6 @@
       </div>
     </div>
 
-    <script type="module" src="/assets/js/app.js?v=20260224-10"></script>
+    <script type="module" src="/assets/js/app.js?v=20260224-11"></script>
   </body>
 </html>

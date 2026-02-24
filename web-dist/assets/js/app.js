@@ -1,8 +1,8 @@
-import * as api from "./api.js?v=20260224-10";
-import { state, setCurrentDaily } from "./state.js?v=20260224-10";
-import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-10";
-import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-10";
-import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-10";
+﻿import * as api from "./api.js?v=20260224-11";
+import { state, setCurrentDaily } from "./state.js?v=20260224-11";
+import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-11";
+import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-11";
+import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-11";
 
 let timerHandle = null;
 
@@ -27,6 +27,19 @@ function lastMode() {
   return localStorage.getItem("puzzle:lastMode");
 }
 
+function rememberDifficulty(level) {
+  localStorage.setItem("puzzle:lastDifficulty", level);
+}
+
+function lastDifficulty() {
+  return localStorage.getItem("puzzle:lastDifficulty");
+}
+
+function currentDifficulty() {
+  const value = dom.difficulty?.value || "medium";
+  return ["easy", "medium", "hard"].includes(value) ? value : "medium";
+}
+
 function renderBoardForMode(daily) {
   dom.board.innerHTML = "";
 
@@ -40,15 +53,21 @@ function renderBoardForMode(daily) {
 
 async function loadMode(mode) {
   setStatus("Loading puzzle...");
+  const difficulty = currentDifficulty();
 
   try {
-    const data = await api.fetchDaily({ mode, userId: currentUserId() });
-    setCurrentDaily(data.daily, mode);
+    const data = await api.fetchDaily({ mode, difficulty, userId: currentUserId() });
+    setCurrentDaily(data.daily, mode, difficulty);
     renderBoardForMode(data.daily);
     renderLeaderboard(data.leaderboard);
     startTimer();
     rememberMode(mode);
-    setStatus(`Loaded: ${data.daily.mode} (${data.daily.date})`);
+    rememberDifficulty(difficulty);
+    if (mode === "picross") {
+      setStatus(`Loaded: ${data.daily.mode} ${difficulty} (${data.daily.date}) - right click for X mark`);
+    } else {
+      setStatus(`Loaded: ${data.daily.mode} ${difficulty} (${data.daily.date})`);
+    }
   } catch (err) {
     setStatus(`Load failed: ${err.message}`);
   }
@@ -76,6 +95,7 @@ async function submitCurrent() {
       mode: state.current.mode,
       userId: currentUserId(),
       date: state.current.date,
+      difficulty: state.currentDifficulty || currentDifficulty(),
       seconds,
       answer: currentAnswer(),
     });
@@ -110,6 +130,11 @@ async function bootstrap() {
       setStatus(`API connected: ${base}`);
     } else {
       setStatus("API module loaded");
+    }
+
+    const savedDifficulty = lastDifficulty();
+    if (savedDifficulty && dom.difficulty) {
+      dom.difficulty.value = savedDifficulty;
     }
 
     const mode = lastMode();

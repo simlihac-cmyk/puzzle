@@ -10,6 +10,7 @@ const {
   sanitizeDailyResponse,
 } = require("./puzzles");
 const { scoreSubmission } = require("./scoring");
+const DIFFICULTIES = new Set(["easy", "medium", "hard"]);
 
 async function handleRequest(req, res) {
   const origin = req.headers.origin;
@@ -32,13 +33,18 @@ async function handleRequest(req, res) {
     const mode = String(parsedUrl.searchParams.get("mode") || "").toLowerCase();
     const dateKey = parsedUrl.searchParams.get("date") || todayUTC();
     const userId = String(parsedUrl.searchParams.get("userId") || "guest").trim() || "guest";
+    const difficulty = String(parsedUrl.searchParams.get("difficulty") || "medium").toLowerCase();
 
     if (!MODES.has(mode)) {
       sendJson(res, 400, { error: "invalid mode", supportedModes: [...MODES] }, origin);
       return;
     }
+    if (!DIFFICULTIES.has(difficulty)) {
+      sendJson(res, 400, { error: "invalid difficulty", supportedDifficulties: [...DIFFICULTIES] }, origin);
+      return;
+    }
 
-    const daily = getDailyPuzzle(mode, dateKey);
+    const daily = getDailyPuzzle(mode, dateKey, difficulty);
     const store = readStore();
 
     sendJson(
@@ -46,8 +52,8 @@ async function handleRequest(req, res) {
       200,
       {
         daily: sanitizeDailyResponse(daily),
-        myBest: pickBestSubmission(store, mode, dateKey, userId),
-        leaderboard: leaderboard(store, mode, dateKey),
+        myBest: pickBestSubmission(store, mode, `${dateKey}:${difficulty}`, userId),
+        leaderboard: leaderboard(store, mode, `${dateKey}:${difficulty}`),
       },
       origin
     );
@@ -67,14 +73,19 @@ async function handleRequest(req, res) {
     const mode = String(body.mode || "").toLowerCase();
     const userId = String(body.userId || "guest").trim() || "guest";
     const dateKey = String(body.date || todayUTC());
+    const difficulty = String(body.difficulty || "medium").toLowerCase();
     const seconds = Number(body.seconds || 0);
 
     if (!MODES.has(mode)) {
       sendJson(res, 400, { error: "invalid mode", supportedModes: [...MODES] }, origin);
       return;
     }
+    if (!DIFFICULTIES.has(difficulty)) {
+      sendJson(res, 400, { error: "invalid difficulty", supportedDifficulties: [...DIFFICULTIES] }, origin);
+      return;
+    }
 
-    const daily = getDailyPuzzle(mode, dateKey);
+    const daily = getDailyPuzzle(mode, dateKey, difficulty);
     const verdict = mode === "sudoku"
       ? validateSudokuSubmission(body.answer, daily)
       : validatePicrossSubmission(body.answer, daily);
@@ -82,7 +93,9 @@ async function handleRequest(req, res) {
     const submission = {
       id: `${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
       mode,
-      date: dateKey,
+      date: `${dateKey}:${difficulty}`,
+      dateKey,
+      difficulty,
       userId,
       correct: verdict.ok,
       reason: verdict.ok ? null : verdict.reason,
@@ -101,7 +114,7 @@ async function handleRequest(req, res) {
       200,
       {
         result: submission,
-        leaderboard: leaderboard(store, mode, dateKey),
+        leaderboard: leaderboard(store, mode, `${dateKey}:${difficulty}`),
       },
       origin
     );

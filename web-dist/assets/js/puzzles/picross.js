@@ -1,3 +1,20 @@
+﻿function setFill(cell, on) {
+  cell.dataset.v = on ? "1" : "0";
+  cell.classList.toggle("on", on);
+  if (on) {
+    cell.classList.remove("mark");
+    cell.textContent = "■";
+  } else {
+    cell.textContent = cell.classList.contains("mark") ? "X" : "·";
+  }
+}
+
+function setMark(cell, marked) {
+  if (cell.dataset.v === "1") return;
+  cell.classList.toggle("mark", marked);
+  cell.textContent = marked ? "X" : "·";
+}
+
 export function renderPicrossBoard(root, puzzle) {
   const board = document.createElement("div");
   board.className = "picross";
@@ -28,10 +45,14 @@ export function renderPicrossBoard(root, puzzle) {
       cell.title = `row ${r + 1} clue: ${puzzle.rowClues[r].join(" ")}`;
 
       cell.addEventListener("click", () => {
-        const next = cell.dataset.v === "1" ? "0" : "1";
-        cell.dataset.v = next;
-        cell.classList.toggle("on", next === "1");
-        cell.textContent = next === "1" ? "■" : "·";
+        const nextOn = cell.dataset.v !== "1";
+        setFill(cell, nextOn);
+      });
+
+      cell.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        setFill(cell, false);
+        setMark(cell, !cell.classList.contains("mark"));
       });
 
       row.appendChild(cell);

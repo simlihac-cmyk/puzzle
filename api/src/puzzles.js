@@ -28,8 +28,14 @@ function shuffle(arr, rand) {
   return out;
 }
 
-function buildSudoku(dateKey) {
-  const rand = makeRng(`sudoku:${dateKey}`);
+function difficultyToBlanks(difficulty) {
+  if (difficulty === "easy") return 36;
+  if (difficulty === "hard") return 54;
+  return 45;
+}
+
+function buildSudoku(dateKey, difficulty) {
+  const rand = makeRng(`sudoku:${dateKey}:${difficulty}`);
   const base = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const digits = shuffle(base, rand);
 
@@ -50,17 +56,18 @@ function buildSudoku(dateKey) {
 
   const puzzle = solution.map((row) => row.slice());
   const positions = Array.from({ length: 81 }, (_, i) => i);
-  const toHide = shuffle(positions, rand).slice(0, 45);
+  const blanks = difficultyToBlanks(difficulty);
+  const toHide = shuffle(positions, rand).slice(0, blanks);
   toHide.forEach((idx) => {
     puzzle[Math.floor(idx / 9)][idx % 9] = 0;
   });
 
-  return { puzzle, solution };
+  return { puzzle, solution, blanks };
 }
 
-function buildPicross(dateKey) {
-  const rand = makeRng(`picross:${dateKey}`);
-  const size = 5;
+function buildPicross(dateKey, difficulty) {
+  const rand = makeRng(`picross:${dateKey}:${difficulty}`);
+  const size = difficulty === "hard" ? 7 : difficulty === "easy" ? 5 : 6;
   const solution = [];
 
   for (let r = 0; r < size; r += 1) {
@@ -103,25 +110,27 @@ function buildPicross(dateKey) {
   return { size, rowClues, colClues, solution };
 }
 
-function getDailyPuzzle(mode, dateKey) {
+function getDailyPuzzle(mode, dateKey, difficulty = "medium") {
   if (mode === "sudoku") {
-    const { puzzle, solution } = buildSudoku(dateKey);
+    const { puzzle, solution, blanks } = buildSudoku(dateKey, difficulty);
     return {
       mode,
       date: dateKey,
+      difficulty,
       puzzle,
       solution,
-      meta: { size: 9, blanks: 45 },
+      meta: { size: 9, blanks },
     };
   }
 
-  const picross = buildPicross(dateKey);
+  const picross = buildPicross(dateKey, difficulty);
   return {
     mode,
     date: dateKey,
+    difficulty,
     puzzle: { size: picross.size, rowClues: picross.rowClues, colClues: picross.colClues },
     solution: picross.solution,
-    meta: { size: picross.size },
+    meta: { size: picross.size, difficulty },
   };
 }
 
@@ -179,6 +188,7 @@ function sanitizeDailyResponse(daily) {
   return {
     mode: daily.mode,
     date: daily.date,
+    difficulty: daily.difficulty,
     puzzle: daily.puzzle,
     meta: daily.meta,
   };

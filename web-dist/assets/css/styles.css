@@ -55,6 +55,7 @@ body {
 }
 
 input,
+select,
 button {
   border-radius: 10px;
   border: 1px solid var(--line);
@@ -115,6 +116,11 @@ button.secondary {
   border-radius: 0;
 }
 
+.sudoku-cell.wrong {
+  background: #ffe9e9;
+  color: #9a1010;
+}
+
 .given {
   background: #ebe8de;
   color: #111;
@@ -152,6 +158,12 @@ button.secondary {
 .picross-cell.on {
   background: #202020;
   color: #fff;
+}
+
+.picross-cell.mark {
+  background: #fff;
+  color: #a33;
+  font-weight: 700;
 }
 
 .leaderboard table {
