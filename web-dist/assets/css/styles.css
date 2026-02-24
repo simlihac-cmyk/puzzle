@@ -1,50 +1,85 @@
-:root {
-  --bg: #f3f2ed;
+﻿:root {
+  --bg: #efede6;
   --paper: #ffffff;
-  --ink: #121212;
-  --muted: #5c5c5c;
-  --line: #d8d4c9;
-  --accent: #007a5a;
-  --accent-2: #004f3c;
+  --ink: #171717;
+  --muted: #5e5e5e;
+  --line: #d9d5cb;
+  --accent: #0f7a5f;
+  --accent-2: #0a5a45;
+  --danger-bg: #ffe7e7;
+  --danger-ink: #9f1414;
+  --sudoku-cell: clamp(34px, 8.2vw, 46px);
+  --picross-cell: clamp(34px, 9.2vw, 46px);
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
+  min-height: 100vh;
   font-family: "Segoe UI", "Noto Sans KR", sans-serif;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 20% -10%, #fff 0%, transparent 45%),
-    radial-gradient(circle at 90% 20%, #ece8dc 0%, transparent 35%),
-    var(--bg);
+  background: linear-gradient(180deg, #f6f5f1 0%, var(--bg) 100%);
+}
+
+.ambient {
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(40px);
+  opacity: 0.3;
+}
+
+.ambient-a {
+  width: 360px;
+  height: 360px;
+  background: #c9e6d8;
+  top: -120px;
+  left: -60px;
+  border-radius: 50%;
+}
+
+.ambient-b {
+  width: 320px;
+  height: 320px;
+  background: #f2ddbf;
+  right: -70px;
+  top: 40px;
+  border-radius: 50%;
 }
 
 .wrap {
-  max-width: 1040px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 .top {
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .title {
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
 }
 
-.sub { color: var(--muted); }
+.sub {
+  margin: 0;
+  color: var(--muted);
+}
 
 .panel {
-  margin-top: 18px;
+  margin-top: 16px;
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(22, 25, 20, 0.06);
 }
 
 .row {
@@ -54,19 +89,31 @@ body {
   align-items: center;
 }
 
+.primary-controls,
+.utility-controls {
+  margin-bottom: 10px;
+}
+
 input,
 select,
 button {
-  border-radius: 10px;
+  min-height: 44px;
+  border-radius: 12px;
   border: 1px solid var(--line);
-  padding: 10px 12px;
-  font-size: 14px;
+  padding: 10px 14px;
+  font-size: 16px;
+  touch-action: manipulation;
+}
+
+input {
+  min-width: 130px;
 }
 
 button {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -79,59 +126,94 @@ button.secondary {
   color: var(--ink);
 }
 
-#status {
-  margin-top: 8px;
-  color: var(--muted);
+#timer {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 800;
 }
 
-#timer {
-  margin-top: 8px;
-  font-size: 14px;
+#status {
+  margin-top: 6px;
   color: #2e2e2e;
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.mode-info {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .game-area {
-  margin-top: 18px;
+  margin-top: 16px;
   display: grid;
-  gap: 16px;
+  gap: 14px;
+}
+
+.board-wrap {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
 }
 
 .sudoku-grid {
   display: grid;
-  grid-template-columns: repeat(9, 34px);
-  border: 2px solid #333;
+  grid-template-columns: repeat(9, var(--sudoku-cell));
+  border: 2px solid #2f2f2f;
   width: fit-content;
   background: #fff;
 }
 
 .sudoku-cell {
-  width: 34px;
-  height: 34px;
+  width: var(--sudoku-cell);
+  height: var(--sudoku-cell);
   text-align: center;
-  border: 1px solid #aaa;
-  font-size: 17px;
-  font-weight: 600;
+  border: 1px solid #a9a9a9;
+  font-size: clamp(16px, 3.8vw, 22px);
+  font-weight: 700;
   padding: 0;
   border-radius: 0;
+  background: #fff;
+}
+
+.sudoku-cell.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: #edf7f3;
 }
 
 .sudoku-cell.wrong {
-  background: #ffe9e9;
-  color: #9a1010;
+  background: var(--danger-bg);
+  color: var(--danger-ink);
 }
 
 .given {
-  background: #ebe8de;
-  color: #111;
+  background: #ece8dd;
+  color: #1f1f1f;
 }
 
 .block-r {
-  border-right: 2px solid #333;
+  border-right: 2px solid #2f2f2f;
 }
 
 .block-b {
-  border-bottom: 2px solid #333;
+  border-bottom: 2px solid #2f2f2f;
+}
+
+.sudoku-pad {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(52px, 1fr));
+  gap: 8px;
+}
+
+.sudoku-pad button {
+  min-height: 48px;
+  font-weight: 700;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .picross {
@@ -143,27 +225,43 @@ button.secondary {
 .clues-row,
 .picross-row {
   display: grid;
-  grid-template-columns: repeat(5, 34px);
   gap: 2px;
 }
 
 .picross-cell {
-  width: 34px;
-  height: 34px;
-  border: 1px solid #999;
+  width: var(--picross-cell);
+  height: var(--picross-cell);
+  border: 1px solid #8e8e8e;
   background: #fff;
-  color: #444;
+  color: #555;
+  font-size: clamp(14px, 3.4vw, 18px);
+  font-weight: 700;
 }
 
 .picross-cell.on {
-  background: #202020;
+  background: #1e1e1e;
   color: #fff;
 }
 
 .picross-cell.mark {
-  background: #fff;
-  color: #a33;
-  font-weight: 700;
+  color: #b03030;
+  background: #fff7f7;
+}
+
+.picross-tools {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.mode-btn {
+  min-width: 120px;
+}
+
+.mode-btn.active {
+  background: var(--accent-2);
+  color: #fff;
+  border-color: var(--accent-2);
 }
 
 .leaderboard table {
@@ -179,7 +277,43 @@ button.secondary {
   font-size: 14px;
 }
 
-@media (max-width: 700px) {
-  .wrap { padding: 14px; }
-  .title { font-size: 26px; }
+@media (max-width: 760px) {
+  .wrap {
+    padding: 12px;
+  }
+
+  .controls {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(8px);
+  }
+
+  .primary-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #userId,
+  #difficulty,
+  #loadSudoku,
+  #loadPicross {
+    width: 100%;
+  }
+
+  .utility-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #submitBtn,
+  #retryBtn,
+  #checkBtn,
+  #clearBtn {
+    width: 100%;
+  }
+
+  .mode-btn {
+    flex: 1;
+  }
 }

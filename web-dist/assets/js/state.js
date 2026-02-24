@@ -1,8 +1,9 @@
-export const state = {
+﻿export const state = {
   current: null,
   startedAt: 0,
   currentMode: null,
   currentDifficulty: "medium",
+  picrossInputMode: "fill",
 };
 
 export function setCurrentDaily(daily, mode, difficulty) {

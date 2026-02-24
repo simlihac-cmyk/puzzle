@@ -1,21 +1,25 @@
 ﻿<!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f7a5f" />
     <title>Puzzle Hub</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="stylesheet" href="/assets/css/styles.css?v=20260224-11" />
+    <link rel="stylesheet" href="/assets/css/styles.css?v=20260224-12" />
   </head>
   <body>
-    <div class="wrap">
-      <div class="top">
-        <div class="title">Daily Puzzle Hub</div>
-        <div class="sub">Sudoku + Picross Daily MVP</div>
-      </div>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
 
-      <div class="panel">
-        <div class="row">
+    <div class="wrap">
+      <header class="top">
+        <h1 class="title">Daily Puzzle Hub</h1>
+        <p class="sub">Sudoku + Picross | Mobile-first Daily Challenge</p>
+      </header>
+
+      <section class="panel controls">
+        <div class="row primary-controls">
           <input id="userId" placeholder="user id" value="guest" />
           <select id="difficulty" aria-label="difficulty">
             <option value="easy">Easy</option>
@@ -24,22 +28,41 @@
           </select>
           <button id="loadSudoku">Today Sudoku</button>
           <button id="loadPicross">Today Picross</button>
+        </div>
+
+        <div class="row utility-controls">
           <button class="secondary" id="submitBtn">Submit</button>
           <button class="secondary" id="retryBtn">Reload</button>
+          <button class="secondary" id="checkBtn">Check</button>
+          <button class="secondary" id="clearBtn">Clear</button>
         </div>
-        <div id="timer">00:00</div>
-        <div id="status">Choose a mode and load a puzzle.</div>
-      </div>
 
-      <div class="game-area">
-        <div id="board"></div>
-        <div class="panel leaderboard">
+        <div id="timer">00:00</div>
+        <div id="status">모드를 선택해 퍼즐을 불러오세요.</div>
+        <div id="modeInfo" class="mode-info">Tip: Sudoku는 숫자패드로, Picross는 Fill/Mark 모드로 플레이하세요.</div>
+      </section>
+
+      <main class="game-area">
+        <section class="panel board-panel">
+          <div id="boardWrap" class="board-wrap">
+            <div id="board"></div>
+          </div>
+
+          <div id="sudokuPad" class="sudoku-pad hidden" aria-label="sudoku keypad"></div>
+
+          <div id="picrossTools" class="picross-tools hidden">
+            <button id="fillModeBtn" class="mode-btn active">Fill</button>
+            <button id="markModeBtn" class="mode-btn">Mark(X)</button>
+          </div>
+        </section>
+
+        <section class="panel leaderboard">
           <strong>Leaderboard</strong>
           <div id="leaderboard">No data yet.</div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
 
-    <script type="module" src="/assets/js/app.js?v=20260224-11"></script>
+    <script type="module" src="/assets/js/app.js?v=20260224-12"></script>
   </body>
 </html>

@@ -15,12 +15,21 @@ function setMark(cell, marked) {
   cell.textContent = marked ? "X" : "·";
 }
 
-export function renderPicrossBoard(root, puzzle) {
+function updateProgress(root, onChanged) {
+  const cells = root.querySelectorAll(".picross-cell");
+  const filled = [...cells].filter((c) => c.dataset.v === "1").length;
+  onChanged?.({ filled, total: cells.length });
+}
+
+export function renderPicrossBoard(root, puzzle, options = {}) {
   const board = document.createElement("div");
   board.className = "picross";
+  board.dataset.inputMode = options.inputMode || "fill";
 
   const colClue = document.createElement("div");
   colClue.className = "clues-row";
+  colClue.style.gridTemplateColumns = `repeat(${puzzle.size}, var(--picross-cell))`;
+
   for (let c = 0; c < puzzle.size; c += 1) {
     const el = document.createElement("div");
     el.textContent = puzzle.colClues[c].join(" ");
@@ -33,6 +42,7 @@ export function renderPicrossBoard(root, puzzle) {
   for (let r = 0; r < puzzle.size; r += 1) {
     const row = document.createElement("div");
     row.className = "picross-row";
+    row.style.gridTemplateColumns = `repeat(${puzzle.size}, var(--picross-cell))`;
 
     for (let c = 0; c < puzzle.size; c += 1) {
       const cell = document.createElement("button");
@@ -45,14 +55,21 @@ export function renderPicrossBoard(root, puzzle) {
       cell.title = `row ${r + 1} clue: ${puzzle.rowClues[r].join(" ")}`;
 
       cell.addEventListener("click", () => {
-        const nextOn = cell.dataset.v !== "1";
-        setFill(cell, nextOn);
+        const mode = board.dataset.inputMode || "fill";
+        if (mode === "mark") {
+          setFill(cell, false);
+          setMark(cell, !cell.classList.contains("mark"));
+        } else {
+          setFill(cell, cell.dataset.v !== "1");
+        }
+        updateProgress(board, options.onBoardChanged);
       });
 
       cell.addEventListener("contextmenu", (event) => {
         event.preventDefault();
         setFill(cell, false);
         setMark(cell, !cell.classList.contains("mark"));
+        updateProgress(board, options.onBoardChanged);
       });
 
       row.appendChild(cell);
@@ -62,6 +79,22 @@ export function renderPicrossBoard(root, puzzle) {
   }
 
   root.appendChild(board);
+  updateProgress(board, options.onBoardChanged);
+}
+
+export function setPicrossInputMode(root, mode) {
+  const board = root.querySelector(".picross");
+  if (!board) return;
+  board.dataset.inputMode = mode;
+}
+
+export function clearPicrossBoard(root) {
+  const cells = root.querySelectorAll(".picross-cell");
+  for (const cell of cells) {
+    cell.dataset.v = "0";
+    cell.classList.remove("on", "mark");
+    cell.textContent = "·";
+  }
 }
 
 export function collectPicrossAnswer(root, size) {
