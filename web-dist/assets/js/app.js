@@ -1,4 +1,4 @@
-﻿import { fetchDaily, resolveApiBase, submitAnswer } from "./api.js";
+﻿import * as api from "./api.js?v=20260224-3";
 import { state, setCurrentDaily } from "./state.js";
 import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js";
 import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js";
@@ -42,7 +42,7 @@ async function loadMode(mode) {
   setStatus("퍼즐을 불러오는 중...");
 
   try {
-    const data = await fetchDaily({ mode, userId: currentUserId() });
+    const data = await api.fetchDaily({ mode, userId: currentUserId() });
     setCurrentDaily(data.daily, mode);
     renderBoardForMode(data.daily);
     renderLeaderboard(data.leaderboard);
@@ -72,7 +72,7 @@ async function submitCurrent() {
 
   try {
     const seconds = Math.max(1, Math.floor((Date.now() - state.startedAt) / 1000));
-    const data = await submitAnswer({
+    const data = await api.submitAnswer({
       mode: state.current.mode,
       userId: currentUserId(),
       date: state.current.date,
@@ -105,8 +105,12 @@ dom.retry.addEventListener("click", () => {
 
 async function bootstrap() {
   try {
-    const base = await resolveApiBase();
-    setStatus(`API 연결 성공: ${base}`);
+    if (typeof api.resolveApiBase === "function") {
+      const base = await api.resolveApiBase();
+      setStatus(`API 연결 성공: ${base}`);
+    } else {
+      setStatus("API 모듈 로드 완료");
+    }
 
     const mode = lastMode();
     if (mode === "sudoku" || mode === "picross") {
