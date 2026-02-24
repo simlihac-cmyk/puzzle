@@ -1,16 +1,13 @@
 const http = require("http");
-
-const PORT = process.env.PORT || 3000;
+const { PORT } = require("./src/config");
+const { handleRequest } = require("./src/handler");
 
 const server = http.createServer((req, res) => {
-  if (req.url === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, service: "puzzle-api" }));
-    return;
-  }
-
-  res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ error: "Not Found" }));
+  handleRequest(req, res).catch((err) => {
+    console.error("Unhandled request error", err);
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Internal Server Error" }));
+  });
 });
 
 server.listen(PORT, () => {

@@ -1,0 +1,166 @@
+:root {
+  --bg: #f3f2ed;
+  --paper: #ffffff;
+  --ink: #121212;
+  --muted: #5c5c5c;
+  --line: #d8d4c9;
+  --accent: #007a5a;
+  --accent-2: #004f3c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 20% -10%, #fff 0%, transparent 45%),
+    radial-gradient(circle at 90% 20%, #ece8dc 0%, transparent 35%),
+    var(--bg);
+}
+
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.top {
+  display: grid;
+  gap: 10px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sub { color: var(--muted); }
+
+.panel {
+  margin-top: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+input,
+button {
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-2);
+}
+
+button.secondary {
+  background: #fff;
+  color: var(--ink);
+}
+
+#status {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.game-area {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 34px);
+  border: 2px solid #333;
+  width: fit-content;
+  background: #fff;
+}
+
+.sudoku-cell {
+  width: 34px;
+  height: 34px;
+  text-align: center;
+  border: 1px solid #aaa;
+  font-size: 17px;
+  font-weight: 600;
+  padding: 0;
+  border-radius: 0;
+}
+
+.given {
+  background: #ebe8de;
+  color: #111;
+}
+
+.block-r {
+  border-right: 2px solid #333;
+}
+
+.block-b {
+  border-bottom: 2px solid #333;
+}
+
+.picross {
+  display: grid;
+  gap: 8px;
+  width: fit-content;
+}
+
+.clues-row,
+.picross-row {
+  display: grid;
+  grid-template-columns: repeat(5, 34px);
+  gap: 2px;
+}
+
+.picross-cell {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #999;
+  background: #fff;
+  color: #444;
+}
+
+.picross-cell.on {
+  background: #202020;
+  color: #fff;
+}
+
+.leaderboard table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard th,
+.leaderboard td {
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  padding: 8px;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .wrap { padding: 14px; }
+  .title { font-size: 26px; }
+}

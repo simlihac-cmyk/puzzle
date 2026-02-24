@@ -20,7 +20,12 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: puzzle-cloudflared
-    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token
+      - ${TUNNEL_TOKEN}
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
     depends_on:
