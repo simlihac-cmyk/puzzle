@@ -1,8 +1,8 @@
-import * as api from "./api.js?v=20260224-9";
-import { state, setCurrentDaily } from "./state.js?v=20260224-9";
-import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-9";
-import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-9";
-import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-9";
+import * as api from "./api.js?v=20260224-10";
+import { state, setCurrentDaily } from "./state.js?v=20260224-10";
+import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-10";
+import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-10";
+import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-10";
 
 let timerHandle = null;
 
@@ -39,7 +39,7 @@ function renderBoardForMode(daily) {
 }
 
 async function loadMode(mode) {
-  setStatus("퍼즐을 불러오는 중...");
+  setStatus("Loading puzzle...");
 
   try {
     const data = await api.fetchDaily({ mode, userId: currentUserId() });
@@ -48,9 +48,9 @@ async function loadMode(mode) {
     renderLeaderboard(data.leaderboard);
     startTimer();
     rememberMode(mode);
-    setStatus(`로드 완료: ${data.daily.mode} (${data.daily.date})`);
+    setStatus(`Loaded: ${data.daily.mode} (${data.daily.date})`);
   } catch (err) {
-    setStatus(`불러오기 실패: ${err.message}`);
+    setStatus(`Load failed: ${err.message}`);
   }
 }
 
@@ -66,7 +66,7 @@ function currentAnswer() {
 
 async function submitCurrent() {
   if (!state.current) {
-    setStatus("먼저 퍼즐을 불러오세요.");
+    setStatus("Load a puzzle first.");
     return;
   }
 
@@ -81,14 +81,14 @@ async function submitCurrent() {
     });
 
     if (data.result.correct) {
-      setStatus(`정답! score=${data.result.score}, ${data.result.seconds}초`);
+      setStatus(`Correct! score=${data.result.score}, ${data.result.seconds}s`);
     } else {
-      setStatus(`오답: ${data.result.reason}`);
+      setStatus(`Wrong: ${data.result.reason}`);
     }
 
     renderLeaderboard(data.leaderboard);
   } catch (err) {
-    setStatus(`제출 실패: ${err.message}`);
+    setStatus(`Submit failed: ${err.message}`);
   }
 }
 
@@ -99,7 +99,7 @@ dom.retry.addEventListener("click", () => {
   if (state.currentMode) {
     loadMode(state.currentMode);
   } else {
-    setStatus("먼저 모드를 선택하세요.");
+    setStatus("Choose a mode first.");
   }
 });
 
@@ -107,9 +107,9 @@ async function bootstrap() {
   try {
     if (typeof api.resolveApiBase === "function") {
       const base = await api.resolveApiBase();
-      setStatus(`API 연결 성공: ${base}`);
+      setStatus(`API connected: ${base}`);
     } else {
-      setStatus("API 모듈 로드 완료");
+      setStatus("API module loaded");
     }
 
     const mode = lastMode();
@@ -117,7 +117,7 @@ async function bootstrap() {
       await loadMode(mode);
     }
   } catch (err) {
-    setStatus(`API 연결 실패: ${err.message}`);
+    setStatus(`API connect failed: ${err.message}`);
   }
 }
 

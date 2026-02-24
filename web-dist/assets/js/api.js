@@ -52,6 +52,7 @@ export async function resolveApiBase() {
     const ok = await probe(base);
     if (ok) {
       resolvedApiBase = base;
+      console.info(`[api] resolved base=${base}`);
       return base;
     }
   }
@@ -72,6 +73,7 @@ async function requestWithFallback(path, options = {}) {
       const res = await request(base, path, options);
       if (res.ok) {
         resolvedApiBase = base;
+        console.info(`[api] request ${path} via ${base}`);
         return res.json ?? {};
       }
 
