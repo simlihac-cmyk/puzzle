@@ -2,9 +2,8 @@ function candidateBases() {
   const origin = window.location.origin;
   return [
     `${origin}/api`,
-    `${origin}`,
-    "https://api.monosaccharide180.com",
     "https://api.puzzle.monosaccharide180.com",
+    "https://api.monosaccharide180.com",
     "http://localhost:3000",
   ];
 }
