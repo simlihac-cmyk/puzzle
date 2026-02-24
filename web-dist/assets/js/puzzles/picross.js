@@ -24,14 +24,14 @@ export function renderPicrossBoard(root, puzzle) {
       cell.dataset.r = String(r);
       cell.dataset.c = String(c);
       cell.dataset.v = "0";
-      cell.textContent = "¡¤";
+      cell.textContent = "Â·";
       cell.title = `row ${r + 1} clue: ${puzzle.rowClues[r].join(" ")}`;
 
       cell.addEventListener("click", () => {
         const next = cell.dataset.v === "1" ? "0" : "1";
         cell.dataset.v = next;
         cell.classList.toggle("on", next === "1");
-        cell.textContent = next === "1" ? "¡á" : "¡¤";
+        cell.textContent = next === "1" ? "â– " : "Â·";
       });
 
       row.appendChild(cell);

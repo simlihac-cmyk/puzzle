@@ -1,8 +1,8 @@
-import * as api from "./api.js?v=20260224-4";
-import { state, setCurrentDaily } from "./state.js?v=20260224-4";
-import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-4";
-import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-4";
-import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-4";
+import * as api from "./api.js?v=20260224-5";
+import { state, setCurrentDaily } from "./state.js?v=20260224-5";
+import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-5";
+import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-5";
+import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-5";
 
 let timerHandle = null;
 
@@ -39,7 +39,7 @@ function renderBoardForMode(daily) {
 }
 
 async function loadMode(mode) {
-  setStatus("ÆÛÁñÀ» ºÒ·¯¿À´Â Áß...");
+  setStatus("í¼ì¦ì„ ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘...");
 
   try {
     const data = await api.fetchDaily({ mode, userId: currentUserId() });
@@ -48,9 +48,9 @@ async function loadMode(mode) {
     renderLeaderboard(data.leaderboard);
     startTimer();
     rememberMode(mode);
-    setStatus(`·Îµå ¿Ï·á: ${data.daily.mode} (${data.daily.date})`);
+    setStatus(`ë¡œë“œ ì™„ë£Œ: ${data.daily.mode} (${data.daily.date})`);
   } catch (err) {
-    setStatus(`ºÒ·¯¿À±â ½ÇÆĞ: ${err.message}`);
+    setStatus(`ë¶ˆëŸ¬ì˜¤ê¸° ì‹¤íŒ¨: ${err.message}`);
   }
 }
 
@@ -66,7 +66,7 @@ function currentAnswer() {
 
 async function submitCurrent() {
   if (!state.current) {
-    setStatus("¸ÕÀú ÆÛÁñÀ» ºÒ·¯¿À¼¼¿ä.");
+    setStatus("ë¨¼ì € í¼ì¦ì„ ë¶ˆëŸ¬ì˜¤ì„¸ìš”.");
     return;
   }
 
@@ -81,14 +81,14 @@ async function submitCurrent() {
     });
 
     if (data.result.correct) {
-      setStatus(`Á¤´ä! score=${data.result.score}, ${data.result.seconds}ÃÊ`);
+      setStatus(`ì •ë‹µ! score=${data.result.score}, ${data.result.seconds}ì´ˆ`);
     } else {
-      setStatus(`¿À´ä: ${data.result.reason}`);
+      setStatus(`ì˜¤ë‹µ: ${data.result.reason}`);
     }
 
     renderLeaderboard(data.leaderboard);
   } catch (err) {
-    setStatus(`Á¦Ãâ ½ÇÆĞ: ${err.message}`);
+    setStatus(`ì œì¶œ ì‹¤íŒ¨: ${err.message}`);
   }
 }
 
@@ -99,7 +99,7 @@ dom.retry.addEventListener("click", () => {
   if (state.currentMode) {
     loadMode(state.currentMode);
   } else {
-    setStatus("¸ÕÀú ¸ğµå¸¦ ¼±ÅÃÇÏ¼¼¿ä.");
+    setStatus("ë¨¼ì € ëª¨ë“œë¥¼ ì„ íƒí•˜ì„¸ìš”.");
   }
 });
 
@@ -107,9 +107,9 @@ async function bootstrap() {
   try {
     if (typeof api.resolveApiBase === "function") {
       const base = await api.resolveApiBase();
-      setStatus(`API ¿¬°á ¼º°ø: ${base}`);
+      setStatus(`API ì—°ê²° ì„±ê³µ: ${base}`);
     } else {
-      setStatus("API ¸ğµâ ·Îµå ¿Ï·á");
+      setStatus("API ëª¨ë“ˆ ë¡œë“œ ì™„ë£Œ");
     }
 
     const mode = lastMode();
@@ -117,7 +117,7 @@ async function bootstrap() {
       await loadMode(mode);
     }
   } catch (err) {
-    setStatus(`API ¿¬°á ½ÇÆĞ: ${err.message}`);
+    setStatus(`API ì—°ê²° ì‹¤íŒ¨: ${err.message}`);
   }
 }
 
