@@ -6,6 +6,7 @@ const MODES = new Set(["sudoku", "picross"]);
 
 const ALLOWED_ORIGINS = new Set([
   "https://puzzle.monosaccharide180.com",
+  "https://puzzle2.monosaccharide180.com",
   "https://puzzle.localhost",
   "http://localhost:5173",
   "http://localhost:3000",
