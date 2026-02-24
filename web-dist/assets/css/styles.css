@@ -83,6 +83,13 @@ button.secondary {
   color: var(--muted);
 }
 
+#timer {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #2e2e2e;
+  font-weight: 600;
+}
+
 .game-area {
   margin-top: 18px;
   display: grid;

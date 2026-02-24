@@ -2,7 +2,7 @@
 setlocal
 
 set "TARGET=sg_mac@100.74.55.70"
-set "DEPLOY_CMD=zsh -lc 'cd ~/puzzle-deploy && git pull && docker compose up -d && docker compose ps'"
+set "DEPLOY_CMD=zsh -lc 'cd ~/puzzle-deploy && cp docker-compose.yml docker-compose.yml.bak && git restore docker-compose.yml && git pull && docker compose up -d && docker compose ps'"
 set "STATUS_CMD=zsh -lc 'cd ~/puzzle-deploy && docker compose ps'"
 set "LOGS_CMD=zsh -lc 'cd ~/puzzle-deploy && docker compose logs --tail=120 cloudflared'"
 

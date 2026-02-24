@@ -20,7 +20,8 @@ async function handleRequest(req, res) {
   }
 
   const parsedUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-  const pathname = parsedUrl.pathname;
+  const rawPath = parsedUrl.pathname;
+  const pathname = rawPath.startsWith("/api/") ? rawPath.slice(4) : rawPath;
 
   if (pathname === "/health" && req.method === "GET") {
     sendJson(res, 200, { ok: true, service: "puzzle-api", now: new Date().toISOString() }, origin);

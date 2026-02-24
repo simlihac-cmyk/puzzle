@@ -1,15 +1,23 @@
-export const dom = {
+ï»¿export const dom = {
   board: document.getElementById("board"),
   status: document.getElementById("status"),
+  timer: document.getElementById("timer"),
   leaderboard: document.getElementById("leaderboard"),
   userId: document.getElementById("userId"),
   loadSudoku: document.getElementById("loadSudoku"),
   loadPicross: document.getElementById("loadPicross"),
   submit: document.getElementById("submitBtn"),
+  retry: document.getElementById("retryBtn"),
 };
 
 export function setStatus(text) {
   dom.status.textContent = text;
+}
+
+export function setTimer(seconds) {
+  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+  dom.timer.textContent = `${mm}:${ss}`;
 }
 
 function escapeHtml(value) {
@@ -23,7 +31,7 @@ function escapeHtml(value) {
 
 export function renderLeaderboard(rows) {
   if (!rows || rows.length === 0) {
-    dom.leaderboard.textContent = "¾ÆÁ÷ Á¦Ãâ ±â·ÏÀÌ ¾ø½À´Ï´Ù.";
+    dom.leaderboard.textContent = "ì•„ì§ ì œì¶œ ê¸°ë¡ì´ ì—†ìŠµë‹ˆë‹¤.";
     return;
   }
 

@@ -1,11 +1,30 @@
-import { fetchDaily, submitAnswer } from "./api.js";
+ï»¿import { fetchDaily, resolveApiBase, submitAnswer } from "./api.js";
 import { state, setCurrentDaily } from "./state.js";
-import { dom, setStatus, renderLeaderboard } from "./ui.js";
+import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js";
 import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js";
 import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js";
 
+let timerHandle = null;
+
 function currentUserId() {
   return (dom.userId.value || "guest").trim() || "guest";
+}
+
+function startTimer() {
+  if (timerHandle) clearInterval(timerHandle);
+  setTimer(0);
+  timerHandle = setInterval(() => {
+    const seconds = Math.max(0, Math.floor((Date.now() - state.startedAt) / 1000));
+    setTimer(seconds);
+  }, 1000);
+}
+
+function rememberMode(mode) {
+  localStorage.setItem("puzzle:lastMode", mode);
+}
+
+function lastMode() {
+  return localStorage.getItem("puzzle:lastMode");
 }
 
 function renderBoardForMode(daily) {
@@ -20,16 +39,18 @@ function renderBoardForMode(daily) {
 }
 
 async function loadMode(mode) {
-  setStatus("ÆÛÁñÀ» ºÒ·¯¿À´Â Áß...");
+  setStatus("í¼ì¦ì„ ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘...");
 
   try {
     const data = await fetchDaily({ mode, userId: currentUserId() });
-    setCurrentDaily(data.daily);
+    setCurrentDaily(data.daily, mode);
     renderBoardForMode(data.daily);
     renderLeaderboard(data.leaderboard);
-    setStatus(`·Îµå ¿Ï·á: ${data.daily.mode} (${data.daily.date})`);
+    startTimer();
+    rememberMode(mode);
+    setStatus(`ë¡œë“œ ì™„ë£Œ: ${data.daily.mode} (${data.daily.date})`);
   } catch (err) {
-    setStatus(`ºÒ·¯¿À±â ½ÇÆĞ: ${err.message}`);
+    setStatus(`ë¶ˆëŸ¬ì˜¤ê¸° ì‹¤íŒ¨: ${err.message}`);
   }
 }
 
@@ -45,7 +66,7 @@ function currentAnswer() {
 
 async function submitCurrent() {
   if (!state.current) {
-    setStatus("¸ÕÀú ÆÛÁñÀ» ºÒ·¯¿À¼¼¿ä.");
+    setStatus("ë¨¼ì € í¼ì¦ì„ ë¶ˆëŸ¬ì˜¤ì„¸ìš”.");
     return;
   }
 
@@ -60,17 +81,40 @@ async function submitCurrent() {
     });
 
     if (data.result.correct) {
-      setStatus(`Á¤´ä! score=${data.result.score}, ${data.result.seconds}ÃÊ`);
+      setStatus(`ì •ë‹µ! score=${data.result.score}, ${data.result.seconds}ì´ˆ`);
     } else {
-      setStatus(`¿À´ä: ${data.result.reason}`);
+      setStatus(`ì˜¤ë‹µ: ${data.result.reason}`);
     }
 
     renderLeaderboard(data.leaderboard);
   } catch (err) {
-    setStatus(`Á¦Ãâ ½ÇÆĞ: ${err.message}`);
+    setStatus(`ì œì¶œ ì‹¤íŒ¨: ${err.message}`);
   }
 }
 
 dom.loadSudoku.addEventListener("click", () => loadMode("sudoku"));
 dom.loadPicross.addEventListener("click", () => loadMode("picross"));
 dom.submit.addEventListener("click", submitCurrent);
+dom.retry.addEventListener("click", () => {
+  if (state.currentMode) {
+    loadMode(state.currentMode);
+  } else {
+    setStatus("ë¨¼ì € ëª¨ë“œë¥¼ ì„ íƒí•˜ì„¸ìš”.");
+  }
+});
+
+async function bootstrap() {
+  try {
+    const base = await resolveApiBase();
+    setStatus(`API ì—°ê²° ì„±ê³µ: ${base}`);
+
+    const mode = lastMode();
+    if (mode === "sudoku" || mode === "picross") {
+      await loadMode(mode);
+    }
+  } catch (err) {
+    setStatus(`API ì—°ê²° ì‹¤íŒ¨: ${err.message}`);
+  }
+}
+
+bootstrap();
