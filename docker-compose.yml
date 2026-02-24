@@ -1,0 +1,29 @@
+services:
+  puzzle-web:
+    image: nginx:alpine
+    container_name: puzzle-web
+    volumes:
+      - ./web-dist:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  puzzle-api:
+    image: node:20-alpine
+    container_name: puzzle-api
+    working_dir: /app
+    command: sh -c "node server.js"
+    volumes:
+      - ./api:/app
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: puzzle-cloudflared
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - puzzle-web
+      - puzzle-api
+    restart: unless-stopped
