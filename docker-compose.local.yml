@@ -1,0 +1,8 @@
+services:
+  puzzle-web:
+    ports:
+      - "8080:80"
+
+  puzzle-api:
+    ports:
+      - "3000:3000"

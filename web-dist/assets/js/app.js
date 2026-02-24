@@ -1,8 +1,8 @@
-﻿import * as api from "./api.js?v=20260224-6";
-import { state, setCurrentDaily } from "./state.js?v=20260224-6";
-import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-6";
-import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-6";
-import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-6";
+import * as api from "./api.js?v=20260224-9";
+import { state, setCurrentDaily } from "./state.js?v=20260224-9";
+import { dom, setStatus, setTimer, renderLeaderboard } from "./ui.js?v=20260224-9";
+import { renderSudokuBoard, collectSudokuAnswer } from "./puzzles/sudoku.js?v=20260224-9";
+import { renderPicrossBoard, collectPicrossAnswer } from "./puzzles/picross.js?v=20260224-9";
 
 let timerHandle = null;
 
@@ -39,7 +39,7 @@ function renderBoardForMode(daily) {
 }
 
 async function loadMode(mode) {
-  setStatus("?쇱쫹??遺덈윭?ㅻ뒗 以?..");
+  setStatus("퍼즐을 불러오는 중...");
 
   try {
     const data = await api.fetchDaily({ mode, userId: currentUserId() });
@@ -48,9 +48,9 @@ async function loadMode(mode) {
     renderLeaderboard(data.leaderboard);
     startTimer();
     rememberMode(mode);
-    setStatus(`濡쒕뱶 ?꾨즺: ${data.daily.mode} (${data.daily.date})`);
+    setStatus(`로드 완료: ${data.daily.mode} (${data.daily.date})`);
   } catch (err) {
-    setStatus(`遺덈윭?ㅺ린 ?ㅽ뙣: ${err.message}`);
+    setStatus(`불러오기 실패: ${err.message}`);
   }
 }
 
@@ -66,7 +66,7 @@ function currentAnswer() {
 
 async function submitCurrent() {
   if (!state.current) {
-    setStatus("癒쇱? ?쇱쫹??遺덈윭?ㅼ꽭??");
+    setStatus("먼저 퍼즐을 불러오세요.");
     return;
   }
 
@@ -81,14 +81,14 @@ async function submitCurrent() {
     });
 
     if (data.result.correct) {
-      setStatus(`?뺣떟! score=${data.result.score}, ${data.result.seconds}珥?);
+      setStatus(`정답! score=${data.result.score}, ${data.result.seconds}초`);
     } else {
-      setStatus(`?ㅻ떟: ${data.result.reason}`);
+      setStatus(`오답: ${data.result.reason}`);
     }
 
     renderLeaderboard(data.leaderboard);
   } catch (err) {
-    setStatus(`?쒖텧 ?ㅽ뙣: ${err.message}`);
+    setStatus(`제출 실패: ${err.message}`);
   }
 }
 
@@ -99,7 +99,7 @@ dom.retry.addEventListener("click", () => {
   if (state.currentMode) {
     loadMode(state.currentMode);
   } else {
-    setStatus("癒쇱? 紐⑤뱶瑜??좏깮?섏꽭??");
+    setStatus("먼저 모드를 선택하세요.");
   }
 });
 
@@ -107,9 +107,9 @@ async function bootstrap() {
   try {
     if (typeof api.resolveApiBase === "function") {
       const base = await api.resolveApiBase();
-      setStatus(`API ?곌껐 ?깃났: ${base}`);
+      setStatus(`API 연결 성공: ${base}`);
     } else {
-      setStatus("API 紐⑤뱢 濡쒕뱶 ?꾨즺");
+      setStatus("API 모듈 로드 완료");
     }
 
     const mode = lastMode();
@@ -117,7 +117,7 @@ async function bootstrap() {
       await loadMode(mode);
     }
   } catch (err) {
-    setStatus(`API ?곌껐 ?ㅽ뙣: ${err.message}`);
+    setStatus(`API 연결 실패: ${err.message}`);
   }
 }
 

@@ -1,9 +1,10 @@
 function candidateBases() {
   const origin = window.location.origin;
   const isLocal = /localhost|127\.0\.0\.1/.test(origin);
-  const bases = [`${origin}/api`, "https://api.monosaccharide180.com"];
-  if (isLocal) bases.push("http://localhost:3000");
-  return bases;
+  if (isLocal) {
+    return ["http://localhost:3000", `${origin}/api`];
+  }
+  return [`${origin}/api`, "https://api.monosaccharide180.com"];
 }
 
 let resolvedApiBase = null;
