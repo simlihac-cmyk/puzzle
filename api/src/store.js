@@ -1,45 +1,107 @@
-const fs = require("fs");
+const fs = require("fs/promises");
 const path = require("path");
-const { STORE_PATH } = require("./config");
+const { STORE_PATH, SUBMISSION_LIMIT } = require("./config");
 
-function readStore() {
-  if (!fs.existsSync(STORE_PATH)) {
-    return { users: {}, submissions: [] };
-  }
+const EMPTY_STORE = { users: {}, submissions: [] };
+let cachedStore = null;
+let writeQueue = Promise.resolve();
+
+function enqueueWrite(task) {
+  writeQueue = writeQueue.catch(() => {}).then(task);
+  return writeQueue;
+}
+
+function normalizeStore(raw) {
+  if (!raw || typeof raw !== "object") return { ...EMPTY_STORE };
+  const users = raw.users && typeof raw.users === "object" ? raw.users : {};
+  const submissions = Array.isArray(raw.submissions) ? raw.submissions : [];
+  return { users, submissions };
+}
+
+async function persistStore(store) {
+  const fileDir = path.dirname(STORE_PATH);
+  const tempPath = `${STORE_PATH}.tmp`;
+
+  await fs.mkdir(fileDir, { recursive: true });
+  await fs.writeFile(tempPath, JSON.stringify(store, null, 2), "utf8");
+  await fs.rename(tempPath, STORE_PATH);
+}
+
+async function readStore() {
+  if (cachedStore) return cachedStore;
 
   try {
-    return JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
+    const text = await fs.readFile(STORE_PATH, "utf8");
+    cachedStore = normalizeStore(JSON.parse(text));
+    return cachedStore;
   } catch (err) {
+    if (err && err.code === "ENOENT") {
+      cachedStore = { ...EMPTY_STORE };
+      return cachedStore;
+    }
     console.error("Failed to read store.json, recreating.", err);
-    return { users: {}, submissions: [] };
+    cachedStore = { ...EMPTY_STORE };
+    return cachedStore;
   }
 }
 
-function writeStore(store) {
-  fs.mkdirSync(path.dirname(STORE_PATH), { recursive: true });
-  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+async function writeStore(store) {
+  cachedStore = normalizeStore(store);
+  enqueueWrite(() => persistStore(cachedStore)).catch((err) => {
+    console.error("Failed to persist store.json", err);
+    throw err;
+  });
+  return writeQueue;
 }
 
-function pickBestSubmission(store, mode, dateKey, userId) {
+async function mutateStore(mutator) {
+  let result;
+  enqueueWrite(async () => {
+    const store = await readStore();
+    result = await mutator(store);
+    if (store.submissions.length > SUBMISSION_LIMIT) {
+      store.submissions = store.submissions.slice(-SUBMISSION_LIMIT);
+    }
+    await persistStore(store);
+  });
+
+  await writeQueue;
+  return result;
+}
+
+function pickBestSubmission(store, mode, dateKey, userId, clientId = null) {
   return store.submissions
-    .filter((s) => s.mode === mode && s.date === dateKey && s.userId === userId && s.correct)
+    .filter((s) => {
+      if (s.mode !== mode || s.date !== dateKey || s.userId !== userId || !s.correct) return false;
+      if (!clientId) return true;
+      return !s.clientId || s.clientId === clientId;
+    })
     .sort((a, b) => b.score - a.score || a.seconds - b.seconds)[0] || null;
 }
 
 function leaderboard(store, mode, dateKey) {
-  const bestByUser = new Map();
+  const bestByKey = new Map();
 
   store.submissions
     .filter((s) => s.mode === mode && s.date === dateKey && s.correct)
     .forEach((s) => {
-      const prev = bestByUser.get(s.userId);
+      const identityKey = s.clientId ? `${s.userId}:${s.clientId}` : s.userId;
+      const prev = bestByKey.get(identityKey);
       if (!prev || s.score > prev.score || (s.score === prev.score && s.seconds < prev.seconds)) {
-        bestByUser.set(s.userId, s);
+        bestByKey.set(identityKey, s);
       }
     });
 
-  return [...bestByUser.values()]
+  const uniqueByUserId = new Map();
+  [...bestByKey.values()]
     .sort((a, b) => b.score - a.score || a.seconds - b.seconds)
+    .forEach((entry) => {
+      if (!uniqueByUserId.has(entry.userId)) {
+        uniqueByUserId.set(entry.userId, entry);
+      }
+    });
+
+  return [...uniqueByUserId.values()]
     .slice(0, 10)
     .map((s, idx) => ({
       rank: idx + 1,
@@ -53,6 +115,7 @@ function leaderboard(store, mode, dateKey) {
 module.exports = {
   readStore,
   writeStore,
+  mutateStore,
   pickBestSubmission,
   leaderboard,
 };

@@ -34,6 +34,74 @@ function difficultyToBlanks(difficulty) {
   return 45;
 }
 
+function cloneGrid(grid) {
+  return grid.map((row) => row.slice());
+}
+
+function sudokuCandidates(grid, r, c) {
+  if (grid[r][c] !== 0) return [];
+
+  const used = new Set();
+
+  for (let i = 0; i < 9; i += 1) {
+    used.add(grid[r][i]);
+    used.add(grid[i][c]);
+  }
+
+  const br = Math.floor(r / 3) * 3;
+  const bc = Math.floor(c / 3) * 3;
+  for (let rr = br; rr < br + 3; rr += 1) {
+    for (let cc = bc; cc < bc + 3; cc += 1) {
+      used.add(grid[rr][cc]);
+    }
+  }
+
+  const out = [];
+  for (let n = 1; n <= 9; n += 1) {
+    if (!used.has(n)) out.push(n);
+  }
+  return out;
+}
+
+function nextSudokuCell(grid) {
+  let best = null;
+
+  for (let r = 0; r < 9; r += 1) {
+    for (let c = 0; c < 9; c += 1) {
+      if (grid[r][c] !== 0) continue;
+      const candidates = sudokuCandidates(grid, r, c);
+      if (candidates.length === 0) return { r, c, candidates };
+      if (!best || candidates.length < best.candidates.length) {
+        best = { r, c, candidates };
+        if (candidates.length === 1) return best;
+      }
+    }
+  }
+
+  return best;
+}
+
+function countSudokuSolutions(grid, limit = 2) {
+  if (limit <= 0) return 0;
+
+  const next = nextSudokuCell(grid);
+  if (!next) return 1;
+  if (next.candidates.length === 0) return 0;
+
+  let count = 0;
+  for (const n of next.candidates) {
+    grid[next.r][next.c] = n;
+    count += countSudokuSolutions(grid, limit - count);
+    if (count >= limit) break;
+  }
+  grid[next.r][next.c] = 0;
+  return count;
+}
+
+function hasUniqueSudokuSolution(puzzle) {
+  return countSudokuSolutions(cloneGrid(puzzle), 2) === 1;
+}
+
 function buildSudoku(dateKey, difficulty) {
   const rand = makeRng(`sudoku:${dateKey}:${difficulty}`);
   const base = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -54,15 +122,27 @@ function buildSudoku(dateKey, difficulty) {
     solution.push(row);
   }
 
-  const puzzle = solution.map((row) => row.slice());
+  const puzzle = cloneGrid(solution);
   const positions = Array.from({ length: 81 }, (_, i) => i);
-  const blanks = difficultyToBlanks(difficulty);
-  const toHide = shuffle(positions, rand).slice(0, blanks);
-  toHide.forEach((idx) => {
-    puzzle[Math.floor(idx / 9)][idx % 9] = 0;
-  });
+  const targetBlanks = difficultyToBlanks(difficulty);
 
-  return { puzzle, solution, blanks };
+  let blanks = 0;
+  for (const idx of shuffle(positions, rand)) {
+    if (blanks >= targetBlanks) break;
+
+    const rr = Math.floor(idx / 9);
+    const cc = idx % 9;
+    const previous = puzzle[rr][cc];
+    puzzle[rr][cc] = 0;
+
+    if (hasUniqueSudokuSolution(puzzle)) {
+      blanks += 1;
+    } else {
+      puzzle[rr][cc] = previous;
+    }
+  }
+
+  return { puzzle, solution, blanks, targetBlanks };
 }
 
 const PICROSS_TEMPLATES = {
@@ -236,14 +316,14 @@ function buildPicross(dateKey, difficulty) {
 
 function getDailyPuzzle(mode, dateKey, difficulty = "medium") {
   if (mode === "sudoku") {
-    const { puzzle, solution, blanks } = buildSudoku(dateKey, difficulty);
+    const { puzzle, solution, blanks, targetBlanks } = buildSudoku(dateKey, difficulty);
     return {
       mode,
       date: dateKey,
       difficulty,
       puzzle,
       solution,
-      meta: { size: 9, blanks },
+      meta: { size: 9, blanks, targetBlanks },
     };
   }
 
@@ -257,7 +337,6 @@ function getDailyPuzzle(mode, dateKey, difficulty = "medium") {
       title: picross.title,
       rowClues: picross.rowClues,
       colClues: picross.colClues,
-      solution: picross.solution,
     },
     solution: picross.solution,
     meta: { size: picross.size, difficulty },

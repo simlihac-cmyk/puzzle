@@ -94,8 +94,8 @@ async function requestWithFallback(path, options = {}) {
   throw lastError;
 }
 
-export async function fetchDaily({ mode, userId, difficulty }) {
-  const path = `/daily?mode=${mode}&date=${todayDate()}&difficulty=${difficulty}&userId=${encodeURIComponent(userId)}`;
+export async function fetchDaily({ mode, userId, difficulty, clientId }) {
+  const path = `/daily?mode=${mode}&date=${todayDate()}&difficulty=${difficulty}&userId=${encodeURIComponent(userId)}&clientId=${encodeURIComponent(clientId)}`;
   return requestWithFallback(path);
 }
 

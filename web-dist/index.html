@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f7a5f" />
     <title>Puzzle Hub</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="stylesheet" href="/assets/css/styles.css?v=20260225-05" />
+    <link rel="stylesheet" href="/assets/css/styles.css?v=20260225-07" />
   </head>
   <body>
     <div class="ambient ambient-a"></div>
@@ -20,7 +20,9 @@
 
       <section class="panel controls">
         <div class="row primary-controls">
-          <input id="userId" placeholder="user id" value="guest" />
+          <label class="sr-only" for="userId">User ID</label>
+          <input id="userId" placeholder="user id" value="guest" maxlength="24" pattern="[A-Za-z0-9._-]{1,24}" autocomplete="nickname" spellcheck="false" />
+          <label class="sr-only" for="difficulty">Difficulty</label>
           <select id="difficulty" aria-label="difficulty">
             <option value="easy">Easy</option>
             <option value="medium" selected>Medium</option>
@@ -37,9 +39,9 @@
           <button class="secondary" id="clearBtn">Clear</button>
         </div>
 
-        <div id="timer">00:00</div>
-        <div id="status">모드를 선택해 시작하세요.</div>
-        <div id="modeInfo" class="mode-info"></div>
+        <div id="timer" aria-label="elapsed timer">00:00</div>
+        <div id="status" role="status" aria-live="polite">모드를 선택해 시작하세요.</div>
+        <div id="modeInfo" class="mode-info" aria-live="polite"></div>
       </section>
 
       <main class="game-area">
@@ -63,6 +65,6 @@
       </main>
     </div>
 
-    <script type="module" src="/assets/js/app.js?v=20260225-06"></script>
+    <script type="module" src="/assets/js/app.js?v=20260225-07"></script>
   </body>
 </html>

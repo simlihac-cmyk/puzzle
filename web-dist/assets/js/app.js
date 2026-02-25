@@ -1,25 +1,32 @@
-import * as api from "./api.js?v=20260225-06";
-import { state, setCurrentDaily } from "./state.js?v=20260225-06";
-import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260225-06";
+import * as api from "./api.js?v=20260225-07";
+import { state, setCurrentDaily } from "./state.js?v=20260225-07";
+import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260225-07";
 import {
   renderSudokuBoard,
   collectSudokuAnswer,
   clearSudokuInputs,
   hasMultipleSudokuNotes,
   getSudokuInputStats,
-} from "./puzzles/sudoku.js?v=20260225-06";
+} from "./puzzles/sudoku.js?v=20260225-07";
 import {
   renderPicrossBoard,
   collectPicrossAnswer,
   setPicrossInputMode,
   clearPicrossBoard,
-} from "./puzzles/picross.js?v=20260225-06";
+} from "./puzzles/picross.js?v=20260225-07";
 
 let timerHandle = null;
 let picrossEndState = "";
+let latestLoadToken = 0;
 
 function currentUserId() {
-  return (dom.userId.value || "guest").trim() || "guest";
+  const value = (dom.userId.value || "").trim();
+  if (!value) return "guest";
+  if (!/^[A-Za-z0-9._-]{1,24}$/.test(value)) {
+    dom.userId.value = "guest";
+    return "guest";
+  }
+  return value;
 }
 
 function currentDifficulty() {
@@ -43,6 +50,21 @@ function lastDifficulty() {
   return localStorage.getItem("puzzle:lastDifficulty");
 }
 
+function createClientId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `cid-${Date.now()}-${Math.random().toString(16).slice(2, 14)}`;
+}
+
+function loadOrCreateClientId() {
+  const key = "puzzle:clientId";
+  const existing = localStorage.getItem(key);
+  if (existing) return existing;
+
+  const generated = createClientId();
+  localStorage.setItem(key, generated);
+  return generated;
+}
+
 function startTimer() {
   if (timerHandle) clearInterval(timerHandle);
   setTimer(0);
@@ -56,13 +78,20 @@ function setModeUI(mode) {
   const isSudoku = mode === "sudoku";
   dom.picrossTools.classList.toggle("hidden", isSudoku);
   dom.sudokuPopup.classList.add("hidden");
-  if (!isSudoku) {
-    setPicrossModeButtons(state.picrossInputMode);
-  }
+  if (!isSudoku) setPicrossModeButtons(state.picrossInputMode);
 }
 
 function setBoardInfo(text) {
   setModeInfo(text || "");
+}
+
+function setSubmitEnabled(enabled) {
+  dom.submit.disabled = !enabled;
+}
+
+function picrossTargetFromPuzzle(puzzle) {
+  if (!puzzle?.rowClues) return 0;
+  return puzzle.rowClues.flat().reduce((sum, n) => sum + Number(n || 0), 0);
 }
 
 function renderBoardForMode(daily) {
@@ -91,41 +120,56 @@ function renderBoardForMode(daily) {
     return;
   }
 
-  const hint = daily.puzzle.title ? daily.puzzle.title : "-";
+  const hint = daily.puzzle.title || "-";
   picrossEndState = "";
 
   renderPicrossBoard(dom.board, daily.puzzle, {
     inputMode: state.picrossInputMode,
-    onBoardChanged: ({ filled, target, lives, maxLives, gameOver, solved }) => {
-      setBoardInfo(`Hint: ${hint} | Lives ${lives}/${maxLives} | ${filled}/${target}`);
+    onBoardChanged: ({ filled, target, solved }) => {
+      setBoardInfo(`Hint: ${hint} | ${filled}/${target}`);
 
       if (solved && picrossEndState !== "solved") {
         picrossEndState = "solved";
         setStatus("Picross clear");
-      } else if (gameOver && lives <= 0 && picrossEndState !== "gameover") {
-        picrossEndState = "gameover";
-        setStatus("Game over - reload to retry");
       }
     },
   });
 }
 
 async function loadMode(mode) {
+  const loadToken = ++latestLoadToken;
   setStatus("Loading...");
   const difficulty = currentDifficulty();
 
   try {
-    const data = await api.fetchDaily({ mode, difficulty, userId: currentUserId() });
-    setCurrentDaily(data.daily, mode, difficulty);
+    const data = await api.fetchDaily({
+      mode,
+      difficulty,
+      userId: currentUserId(),
+      clientId: state.clientId,
+    });
+    if (loadToken !== latestLoadToken) return;
+
+    setCurrentDaily(data.daily, mode, difficulty, data.playToken);
     setModeUI(mode);
     renderBoardForMode(data.daily);
     renderLeaderboard(data.leaderboard);
     startTimer();
     rememberMode(mode);
     rememberDifficulty(difficulty);
+
+    if (data.userLocked) {
+      setSubmitEnabled(false);
+      setStatus("This userId is already locked on another device. Change userId to submit.");
+      return;
+    }
+
+    setSubmitEnabled(true);
     setStatus(mode === "picross" ? "Picross ready" : "Sudoku ready");
   } catch (err) {
+    if (loadToken !== latestLoadToken) return;
     setStatus(`Load failed: ${err.message}`);
+    setSubmitEnabled(false);
   }
 }
 
@@ -140,6 +184,10 @@ async function submitCurrent() {
     setStatus("Load a puzzle first");
     return;
   }
+  if (!state.playToken) {
+    setStatus("Session expired. Reload puzzle first");
+    return;
+  }
 
   if (state.current.mode === "sudoku" && hasMultipleSudokuNotes(dom.board)) {
     setStatus("Submit blocked: remove memo cells");
@@ -147,13 +195,13 @@ async function submitCurrent() {
   }
 
   try {
-    const seconds = Math.max(1, Math.floor((Date.now() - state.startedAt) / 1000));
     const data = await api.submitAnswer({
       mode: state.current.mode,
       userId: currentUserId(),
+      clientId: state.clientId,
       date: state.current.date,
       difficulty: state.currentDifficulty || currentDifficulty(),
-      seconds,
+      playToken: state.playToken,
       answer: currentAnswer(),
     });
 
@@ -177,7 +225,6 @@ function clearCurrentBoard() {
     setStatus("Sudoku cleared");
   } else {
     clearPicrossBoard(dom.board);
-    renderBoardForMode(state.current);
     setStatus("Picross cleared");
   }
 }
@@ -194,8 +241,8 @@ function checkCurrentBoard() {
   } else {
     const answer = currentAnswer();
     const filled = answer.flat().filter((v) => Number(v) === 1).length;
-    const total = state.current.puzzle.size * state.current.puzzle.size;
-    setStatus(`Check: ${filled}/${total}`);
+    const target = picrossTargetFromPuzzle(state.current.puzzle);
+    setStatus(`Check: filled ${filled}, target ${target}`);
   }
 }
 
@@ -224,7 +271,10 @@ dom.difficulty?.addEventListener("change", () => {
 
 async function bootstrap() {
   try {
+    state.clientId = loadOrCreateClientId();
     setModeUI("sudoku");
+    setSubmitEnabled(false);
+
     if (typeof api.resolveApiBase === "function") {
       await api.resolveApiBase();
     }
@@ -240,6 +290,7 @@ async function bootstrap() {
     }
   } catch (err) {
     setStatus(`Connection failed: ${err.message}`);
+    setSubmitEnabled(false);
   }
 }
 

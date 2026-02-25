@@ -19,39 +19,107 @@ function getCell(board, r, c) {
   return board.querySelector(`.picross-cell[data-r="${r}"][data-c="${c}"]`);
 }
 
-function getLives(board) {
-  return Number(board.dataset.lives || board.dataset.maxLives || 5);
+function targetFillCount(rowClues) {
+  return rowClues.flat().reduce((sum, n) => sum + (Number(n) > 0 ? Number(n) : 0), 0);
 }
 
-function setLives(board, value) {
-  board.dataset.lives = String(Math.max(0, value));
+function groupsFromValues(values) {
+  const groups = [];
+  let run = 0;
+
+  for (const value of values) {
+    if (value === 1) {
+      run += 1;
+    } else if (run > 0) {
+      groups.push(run);
+      run = 0;
+    }
+  }
+
+  if (run > 0) groups.push(run);
+  return groups.length > 0 ? groups : [0];
 }
 
-function isGameOver(board) {
-  return board.dataset.gameOver === "1";
+function sameNumbers(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (Number(a[i]) !== Number(b[i])) return false;
+  }
+  return true;
 }
 
-function setGameOver(board, value) {
-  board.dataset.gameOver = value ? "1" : "0";
+function rowValues(board, rowIndex) {
+  const size = Number(board.dataset.size || 0);
+  const values = [];
+  for (let c = 0; c < size; c += 1) {
+    const cell = getCell(board, rowIndex, c);
+    values.push(cell?.dataset.v === "1" ? 1 : 0);
+  }
+  return values;
 }
 
-function targetFillCount(solution) {
-  return solution.flat().filter((v) => Number(v) === 1).length;
+function colValues(board, colIndex) {
+  const size = Number(board.dataset.size || 0);
+  const values = [];
+  for (let r = 0; r < size; r += 1) {
+    const cell = getCell(board, r, colIndex);
+    values.push(cell?.dataset.v === "1" ? 1 : 0);
+  }
+  return values;
+}
+
+function rowSolved(board, rowIndex) {
+  const clues = board.__rowClues?.[rowIndex] || [0];
+  return sameNumbers(groupsFromValues(rowValues(board, rowIndex)), clues);
+}
+
+function colSolved(board, colIndex) {
+  const clues = board.__colClues?.[colIndex] || [0];
+  return sameNumbers(groupsFromValues(colValues(board, colIndex)), clues);
+}
+
+function autoMarkCompletedLines(board) {
+  const size = Number(board.dataset.size || 0);
+
+  for (let r = 0; r < size; r += 1) {
+    if (!rowSolved(board, r)) continue;
+    for (let c = 0; c < size; c += 1) {
+      const cell = getCell(board, r, c);
+      if (cell && cell.dataset.v !== "1") setMark(cell, true);
+    }
+  }
+
+  for (let c = 0; c < size; c += 1) {
+    if (!colSolved(board, c)) continue;
+    for (let r = 0; r < size; r += 1) {
+      const cell = getCell(board, r, c);
+      if (cell && cell.dataset.v !== "1") setMark(cell, true);
+    }
+  }
+}
+
+function isSolved(board) {
+  const size = Number(board.dataset.size || 0);
+  if (size <= 0) return false;
+
+  for (let r = 0; r < size; r += 1) {
+    if (!rowSolved(board, r)) return false;
+  }
+  for (let c = 0; c < size; c += 1) {
+    if (!colSolved(board, c)) return false;
+  }
+
+  return true;
 }
 
 function progressState(board) {
   const cells = board.querySelectorAll(".picross-cell");
   const filled = [...cells].filter((c) => c.dataset.v === "1").length;
-  const solution = board.__solution || [];
-  const target = solution.length > 0 ? targetFillCount(solution) : cells.length;
 
   return {
     filled,
     total: cells.length,
-    target,
-    lives: getLives(board),
-    maxLives: Number(board.dataset.maxLives || 5),
-    gameOver: isGameOver(board),
+    target: Number(board.dataset.target || 0),
     solved: board.dataset.solved === "1",
   };
 }
@@ -60,99 +128,15 @@ function emitProgress(board, onChanged) {
   onChanged?.(progressState(board));
 }
 
-function rowCorrectlyCompleted(board, rowIndex) {
-  const solution = board.__solution;
-  const size = solution.length;
-  let required = 0;
-  let filledCorrect = 0;
-
-  for (let c = 0; c < size; c += 1) {
-    if (solution[rowIndex][c] === 1) required += 1;
-    const cell = getCell(board, rowIndex, c);
-    if (cell && cell.dataset.v === "1" && solution[rowIndex][c] === 1) filledCorrect += 1;
-  }
-
-  return required > 0 && filledCorrect === required;
-}
-
-function colCorrectlyCompleted(board, colIndex) {
-  const solution = board.__solution;
-  const size = solution.length;
-  let required = 0;
-  let filledCorrect = 0;
-
-  for (let r = 0; r < size; r += 1) {
-    if (solution[r][colIndex] === 1) required += 1;
-    const cell = getCell(board, r, colIndex);
-    if (cell && cell.dataset.v === "1" && solution[r][colIndex] === 1) filledCorrect += 1;
-  }
-
-  return required > 0 && filledCorrect === required;
-}
-
-function autoMarkCompletedLines(board) {
-  const solution = board.__solution;
-  if (!solution || solution.length === 0) return;
-
-  const size = solution.length;
-
-  for (let r = 0; r < size; r += 1) {
-    if (!rowCorrectlyCompleted(board, r)) continue;
-    for (let c = 0; c < size; c += 1) {
-      if (solution[r][c] === 0) {
-        const cell = getCell(board, r, c);
-        if (cell && cell.dataset.v !== "1") setMark(cell, true);
-      }
-    }
-  }
-
-  for (let c = 0; c < size; c += 1) {
-    if (!colCorrectlyCompleted(board, c)) continue;
-    for (let r = 0; r < size; r += 1) {
-      if (solution[r][c] === 0) {
-        const cell = getCell(board, r, c);
-        if (cell && cell.dataset.v !== "1") setMark(cell, true);
-      }
-    }
-  }
-}
-
-function applyWrongFill(board, cell) {
-  setFill(cell, false);
-  setMark(cell, true);
-
-  cell.classList.add("error");
-  window.setTimeout(() => {
-    cell.classList.remove("error");
-  }, 220);
-
-  setLives(board, getLives(board) - 1);
-  if (getLives(board) <= 0) setGameOver(board, true);
-}
-
-function isSolved(board) {
-  const solution = board.__solution;
-  if (!solution || solution.length === 0) return false;
-
-  const size = solution.length;
-  for (let r = 0; r < size; r += 1) {
-    for (let c = 0; c < size; c += 1) {
-      const cell = getCell(board, r, c);
-      const actual = cell?.dataset.v === "1" ? 1 : 0;
-      if (actual !== solution[r][c]) return false;
-    }
-  }
-  return true;
-}
-
 export function renderPicrossBoard(root, puzzle, options = {}) {
   const board = document.createElement("div");
   board.className = "picross";
   board.dataset.inputMode = options.inputMode || "fill";
-  board.dataset.maxLives = "5";
-  board.dataset.lives = "5";
-  board.dataset.gameOver = "0";
-  board.__solution = Array.isArray(puzzle.solution) ? puzzle.solution : [];
+  board.dataset.size = String(puzzle.size);
+  board.dataset.target = String(targetFillCount(puzzle.rowClues || []));
+  board.dataset.solved = "0";
+  board.__rowClues = Array.isArray(puzzle.rowClues) ? puzzle.rowClues : [];
+  board.__colClues = Array.isArray(puzzle.colClues) ? puzzle.colClues : [];
 
   const gridTemplate = `var(--picross-clue-width) repeat(${puzzle.size}, var(--picross-cell))`;
 
@@ -194,11 +178,9 @@ export function renderPicrossBoard(root, puzzle, options = {}) {
       cell.dataset.c = String(c);
       cell.dataset.v = "0";
       cell.textContent = "·";
-      cell.title = `row ${r + 1} clue: ${puzzle.rowClues[r].join(" ")}`;
+      cell.title = `row ${r + 1}: ${puzzle.rowClues[r].join(" ")} | col ${c + 1}: ${puzzle.colClues[c].join(" ")}`;
 
       cell.addEventListener("click", () => {
-        if (isGameOver(board)) return;
-
         const mode = board.dataset.inputMode || "fill";
         if (mode === "mark") {
           setFill(cell, false);
@@ -206,35 +188,20 @@ export function renderPicrossBoard(root, puzzle, options = {}) {
         } else if (cell.dataset.v === "1") {
           setFill(cell, false);
         } else {
-          const rr = Number(cell.dataset.r);
-          const cc = Number(cell.dataset.c);
-          const isCorrect = board.__solution?.[rr]?.[cc] === 1;
-          if (isCorrect) {
-            setFill(cell, true);
-          } else {
-            applyWrongFill(board, cell);
-          }
+          setFill(cell, true);
         }
 
         autoMarkCompletedLines(board);
-
-        const solved = isSolved(board);
-        if (solved) {
-          setGameOver(board, true);
-          board.dataset.solved = "1";
-        } else {
-          board.dataset.solved = "0";
-        }
-
+        board.dataset.solved = isSolved(board) ? "1" : "0";
         emitProgress(board, options.onBoardChanged);
       });
 
       cell.addEventListener("contextmenu", (event) => {
         event.preventDefault();
-        if (isGameOver(board)) return;
         setFill(cell, false);
         setMark(cell, !cell.classList.contains("mark"));
         autoMarkCompletedLines(board);
+        board.dataset.solved = isSolved(board) ? "1" : "0";
         emitProgress(board, options.onBoardChanged);
       });
 
@@ -244,6 +211,7 @@ export function renderPicrossBoard(root, puzzle, options = {}) {
     board.appendChild(row);
   }
 
+  board.__emitProgress = () => emitProgress(board, options.onBoardChanged);
   root.appendChild(board);
   emitProgress(board, options.onBoardChanged);
 }
@@ -265,9 +233,8 @@ export function clearPicrossBoard(root) {
     cell.textContent = "·";
   }
 
-  setLives(board, Number(board.dataset.maxLives || 5));
-  setGameOver(board, false);
   board.dataset.solved = "0";
+  board.__emitProgress?.();
 }
 
 export function collectPicrossAnswer(root, size) {
