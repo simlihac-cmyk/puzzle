@@ -25,16 +25,20 @@ export function renderPicrossBoard(root, puzzle, options = {}) {
   const board = document.createElement("div");
   board.className = "picross";
   board.dataset.inputMode = options.inputMode || "fill";
+  const gridTemplate = `56px repeat(${puzzle.size}, var(--picross-cell))`;
 
   const colClue = document.createElement("div");
   colClue.className = "clues-row";
-  colClue.style.gridTemplateColumns = `repeat(${puzzle.size}, var(--picross-cell))`;
+  colClue.style.gridTemplateColumns = gridTemplate;
+
+  const corner = document.createElement("div");
+  corner.className = "picross-corner";
+  colClue.appendChild(corner);
 
   for (let c = 0; c < puzzle.size; c += 1) {
     const el = document.createElement("div");
-    el.textContent = puzzle.colClues[c].join(" ");
-    el.style.textAlign = "center";
-    el.style.fontSize = "12px";
+    el.className = "picross-col-clue";
+    el.textContent = puzzle.colClues[c].join("\n");
     colClue.appendChild(el);
   }
   board.appendChild(colClue);
@@ -42,7 +46,12 @@ export function renderPicrossBoard(root, puzzle, options = {}) {
   for (let r = 0; r < puzzle.size; r += 1) {
     const row = document.createElement("div");
     row.className = "picross-row";
-    row.style.gridTemplateColumns = `repeat(${puzzle.size}, var(--picross-cell))`;
+    row.style.gridTemplateColumns = gridTemplate;
+
+    const rowClue = document.createElement("div");
+    rowClue.className = "picross-row-clue";
+    rowClue.textContent = puzzle.rowClues[r].join(" ");
+    row.appendChild(rowClue);
 
     for (let c = 0; c < puzzle.size; c += 1) {
       const cell = document.createElement("button");
