@@ -1,18 +1,18 @@
-﻿import * as api from "./api.js?v=20260224-13";
-import { state, setCurrentDaily } from "./state.js?v=20260224-13";
-import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260224-13";
+﻿import * as api from "./api.js?v=20260224-14";
+import { state, setCurrentDaily } from "./state.js?v=20260224-14";
+import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260224-14";
 import {
   renderSudokuBoard,
   collectSudokuAnswer,
   setSelectedSudokuValue,
   clearSudokuInputs,
-} from "./puzzles/sudoku.js?v=20260224-13";
+} from "./puzzles/sudoku.js?v=20260224-14";
 import {
   renderPicrossBoard,
   collectPicrossAnswer,
   setPicrossInputMode,
   clearPicrossBoard,
-} from "./puzzles/picross.js?v=20260224-13";
+} from "./puzzles/picross.js?v=20260224-14";
 
 let timerHandle = null;
 
