@@ -1,16 +1,20 @@
-﻿:root {
-  --bg: #f7f4ef;
-  --paper: #ffffff;
-  --ink: #1f1a1a;
-  --muted: #6c6363;
-  --line: #e7ddcf;
+:root {
+  --bg: #fffaf3;
+  --paper: #fffefe;
+  --ink: #2a2020;
+  --muted: #736767;
+  --line: #f1dfd4;
+  --line-strong: #b7856f;
   --accent: #ff7f66;
-  --accent-2: #ff6645;
-  --mint: #d6efe4;
-  --danger-bg: #ffe7e7;
-  --danger-ink: #9f1414;
-  --sudoku-board: min(90vw, 500px);
-  --picross-cell: clamp(34px, 8.3vw, 48px);
+  --accent-2: #ff5f7f;
+  --mint: #33b89f;
+  --mint-soft: #e6faf5;
+  --danger-bg: #ffe8ea;
+  --danger-ink: #a61338;
+  --sudoku-cell: clamp(34px, 9vw, 56px);
+  --sudoku-board: calc(var(--sudoku-cell) * 9);
+  --picross-cell: clamp(30px, 8vw, 44px);
+  --picross-clue-width: clamp(56px, 12vw, 78px);
 }
 
 * {
@@ -20,78 +24,79 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+  font-family: "Nunito", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(circle at 12% -8%, #ffe5d7 0%, transparent 40%),
-    radial-gradient(circle at 95% 20%, #d7f0e6 0%, transparent 36%),
-    linear-gradient(180deg, #fbf8f2 0%, var(--bg) 100%);
+    radial-gradient(circle at 6% -8%, #ffd8cc 0%, transparent 38%),
+    radial-gradient(circle at 96% 20%, #d8f5eb 0%, transparent 36%),
+    linear-gradient(180deg, #fffdf8 0%, var(--bg) 100%);
 }
 
 .ambient {
   position: fixed;
   pointer-events: none;
   z-index: -1;
-  filter: blur(46px);
-  opacity: 0.33;
+  filter: blur(52px);
+  opacity: 0.35;
 }
 
 .ambient-a {
   width: 360px;
   height: 360px;
-  background: #ffdccc;
-  top: -120px;
-  left: -60px;
   border-radius: 50%;
+  background: #ffd4ca;
+  top: -130px;
+  left: -70px;
 }
 
 .ambient-b {
-  width: 340px;
-  height: 340px;
-  background: #d4eee3;
-  right: -80px;
-  top: 20px;
+  width: 320px;
+  height: 320px;
   border-radius: 50%;
+  background: #caf1e4;
+  top: 20px;
+  right: -70px;
 }
 
 .wrap {
-  max-width: 1100px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 18px 14px 28px;
 }
 
 .top {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .title {
   margin: 0;
-  font-size: clamp(30px, 5vw, 46px);
-  line-height: 1.05;
+  font-size: clamp(36px, 6vw, 58px);
+  line-height: 1.02;
   letter-spacing: -0.03em;
-  color: #2c2323;
+  color: #2a2121;
 }
 
 .sub {
   margin: 0;
   color: var(--muted);
+  font-size: clamp(13px, 2.8vw, 16px);
 }
 
 .panel {
-  margin-top: 16px;
-  background: var(--paper);
+  margin-top: 14px;
+  background: linear-gradient(180deg, #fff 0%, #fffdfa 100%);
   border: 1px solid var(--line);
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 14px;
-  box-shadow: 0 10px 28px rgba(67, 44, 26, 0.08);
+  box-shadow: 0 12px 30px rgba(96, 58, 40, 0.1);
 }
 
 .row {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
   align-items: center;
+  gap: 8px;
 }
 
 .primary-controls,
@@ -103,10 +108,10 @@ body {
 .controls select,
 .controls button {
   min-height: 44px;
-  border-radius: 12px;
+  border-radius: 13px;
   border: 1px solid var(--line);
-  padding: 10px 14px;
-  font-size: 16px;
+  padding: 10px 13px;
+  font-size: 15px;
   touch-action: manipulation;
 }
 
@@ -115,145 +120,207 @@ body {
 }
 
 .controls button,
-.sudoku-pad button,
-.picross-tools button {
-  background: var(--accent);
-  border-color: var(--accent);
+.picross-tools button,
+.sudoku-popup button {
+  border-color: transparent;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
   color: #fff;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.12s ease;
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
 
 .controls button:hover,
-.sudoku-pad button:hover,
-.picross-tools button:hover {
-  background: var(--accent-2);
+.picross-tools button:hover,
+.sudoku-popup button:hover {
+  filter: brightness(1.03);
 }
 
 .controls button:active,
-.sudoku-pad button:active,
-.picross-tools button:active {
-  transform: translateY(1px);
+.picross-tools button:active,
+.sudoku-popup button:active {
+  transform: translateY(1px) scale(0.99);
 }
 
 .controls button.secondary,
-.sudoku-pad button.secondary,
-.picross-tools button.secondary {
+.picross-tools button.secondary,
+.sudoku-popup button.secondary,
+.mode-btn {
   background: #fff;
   color: var(--ink);
+  border: 1px solid #7bd0bf;
+}
+
+.mode-btn.active {
+  background: linear-gradient(180deg, #2cc4a8 0%, #1ea88d 100%);
+  color: #fff;
+  border-color: #1ea88d;
 }
 
 #timer {
   margin-top: 2px;
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 900;
+  color: #2e2424;
 }
 
 #status {
   margin-top: 6px;
-  color: #2e2e2e;
-  font-weight: 600;
+  color: #3a3232;
+  font-weight: 700;
 }
 
 .mode-info {
   margin-top: 4px;
-  color: var(--muted);
   font-size: 14px;
+  color: var(--muted);
 }
 
 .game-area {
-  margin-top: 16px;
+  margin-top: 12px;
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .board-panel {
-  background: linear-gradient(180deg, #fff 0%, #fffdf8 100%);
+  position: relative;
 }
 
 .board-wrap {
+  width: 100%;
   display: flex;
   justify-content: center;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
 }
 
 #board {
   width: fit-content;
+  max-width: 100%;
 }
 
 .sudoku-grid {
   display: grid;
   width: var(--sudoku-board);
-  aspect-ratio: 1 / 1;
-  grid-template-columns: repeat(9, 1fr);
-  grid-template-rows: repeat(9, 1fr);
-  border: 3px solid #3d3434;
-  background: #fff;
+  height: var(--sudoku-board);
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-rows: repeat(9, minmax(0, 1fr));
+  border: 4px solid #423131;
+  border-radius: 14px;
   overflow: hidden;
-  border-radius: 8px;
+  background: #fff;
+  box-shadow: inset 0 0 0 3px #fff3eb;
 }
 
 .sudoku-cell {
+  appearance: none;
   width: 100%;
   height: 100%;
+  min-width: 0;
   min-height: 0;
-  text-align: center;
-  border: 1px solid #bdb3aa;
-  font-size: clamp(16px, 2.8vw, 22px);
-  font-weight: 700;
-  padding: 0;
+  border: 1px solid #dbc3b6;
   border-radius: 0;
+  padding: 0;
+  margin: 0;
   background: #fff;
-  appearance: none;
-  -webkit-appearance: none;
+  color: #272121;
+  display: grid;
+  place-items: center;
+  position: relative;
   line-height: 1;
-  color: #1f1f1f;
-  -webkit-text-fill-color: #1f1f1f;
-  opacity: 1;
-  caret-color: #ff7f66;
+  font: inherit;
+}
+
+.sudoku-main {
+  font-size: clamp(17px, 3vw, 26px);
+  font-weight: 900;
+}
+
+.sudoku-notes {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 3px;
+}
+
+.sudoku-note {
+  display: grid;
+  place-items: center;
+  font-size: clamp(8px, 1.55vw, 11px);
+  color: #6d6464;
+  font-weight: 700;
 }
 
 .sudoku-cell.selected {
-  outline: 2px solid #ff8f76;
-  outline-offset: -2px;
-  background: #fff5ef;
+  background: #fff0e7;
+  box-shadow: inset 0 0 0 2px #ff8f76;
 }
 
 .sudoku-cell.wrong {
   background: var(--danger-bg);
+}
+
+.sudoku-cell.wrong .sudoku-main,
+.sudoku-cell.wrong .sudoku-note {
   color: var(--danger-ink);
-  -webkit-text-fill-color: var(--danger-ink);
 }
 
 .given {
-  background: #efe8dc;
-  color: #1f1f1f;
-  -webkit-text-fill-color: #1f1f1f;
-  opacity: 1;
+  background: #f5ece4;
+}
+
+.given .sudoku-main {
+  color: #2f2626;
 }
 
 .block-r {
-  border-right: 2px solid #3d3434;
+  border-right: 3px solid #423131;
 }
 
 .block-b {
-  border-bottom: 2px solid #3d3434;
+  border-bottom: 3px solid #423131;
 }
 
-.sudoku-pad {
-  margin-top: 12px;
+.sudoku-popup {
+  position: fixed;
+  z-index: 60;
+  width: min(250px, 88vw);
+  border-radius: 16px;
+  border: 1px solid #f6b9a8;
+  background: linear-gradient(180deg, #fff8f4 0%, #fff 100%);
+  box-shadow: 0 14px 30px rgba(95, 38, 24, 0.22);
+  padding: 9px;
+}
+
+.sudoku-popup-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(52px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
 }
 
-.sudoku-pad button {
-  min-height: 48px;
+.popup-num,
+.popup-clear {
+  min-height: 42px;
   border-radius: 12px;
-  border: 1px solid #edc7b8;
+  border: 1px solid #f3b8a6;
+  background: #fff;
+  color: #b64333;
+  font-weight: 800;
+}
+
+.popup-num.active {
+  background: linear-gradient(180deg, #ffd8ca 0%, #ffc5b0 100%);
+  color: #8b2c1d;
+  border-color: #f2a08b;
+}
+
+.popup-clear {
+  margin-top: 8px;
+  width: 100%;
 }
 
 .hidden {
@@ -262,67 +329,84 @@ body {
 
 .picross {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   width: fit-content;
+  margin-inline: auto;
 }
 
 .clues-row,
 .picross-row {
   display: grid;
-  gap: 2px;
-}
-
-.picross-corner,
-.picross-col-clue,
-.picross-row-clue {
-  min-height: var(--picross-cell);
-  display: grid;
-  align-items: center;
+  gap: 4px;
+  align-items: stretch;
 }
 
 .picross-corner {
-  width: 56px;
+  width: var(--picross-clue-width);
+  min-height: calc(var(--picross-cell) * 1.95);
+  border-radius: 10px;
+  background: #fff3eb;
+  border: 1px solid #f2d6c8;
 }
 
 .picross-col-clue {
   width: var(--picross-cell);
-  text-align: center;
-  font-size: 11px;
-  color: #3f3f3f;
-  line-height: 1.1;
-  white-space: pre-line;
+  min-height: calc(var(--picross-cell) * 1.95);
+  padding: 4px 2px;
+  border-radius: 10px;
+  border: 1px solid #f2d6c8;
+  background: #fff8f3;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
+  font-size: clamp(11px, 2.5vw, 13px);
+  color: #4f4242;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.picross-col-clue span {
+  display: block;
 }
 
 .picross-row-clue {
-  width: 56px;
-  font-size: 12px;
-  color: #3f3f3f;
-  justify-content: end;
-  padding-right: 6px;
-  font-weight: 700;
+  width: var(--picross-clue-width);
+  border-radius: 10px;
+  border: 1px solid #f2d6c8;
+  background: #fff8f3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  font-size: clamp(12px, 2.8vw, 14px);
+  color: #4f4242;
+  font-weight: 800;
 }
 
 .picross-cell {
   width: var(--picross-cell);
   height: var(--picross-cell);
+  min-width: 0;
   min-height: 0;
   padding: 0;
-  border-radius: 0;
+  border-radius: 8px;
   border: 1px solid #8e8e8e;
   background: #fff;
-  color: #555;
+  color: #7f7474;
   font-size: clamp(14px, 3.4vw, 18px);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .picross-cell.on {
-  background: #1f1f1f;
+  background: #2f2a2a;
   color: #fff;
 }
 
 .picross-cell.mark {
-  color: #b03030;
-  background: #fff7f7;
+  background: #fff3f4;
+  color: #c53357;
 }
 
 .picross-tools {
@@ -336,12 +420,6 @@ body {
   border-radius: 12px;
 }
 
-.mode-btn.active {
-  background: var(--accent-2);
-  color: #fff;
-  border-color: var(--accent-2);
-}
-
 .leaderboard table {
   width: 100%;
   border-collapse: collapse;
@@ -350,14 +428,14 @@ body {
 .leaderboard th,
 .leaderboard td {
   border-bottom: 1px solid var(--line);
+  padding: 8px 6px;
   text-align: left;
-  padding: 8px;
   font-size: 14px;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 880px) {
   .wrap {
-    padding: 12px;
+    padding: 12px 10px 20px;
   }
 
   .controls {
@@ -367,23 +445,23 @@ body {
     backdrop-filter: blur(8px);
   }
 
-  .primary-controls {
+  .sudoku-popup {
+    width: min(230px, 90vw);
+  }
+}
+
+@media (max-width: 760px) {
+  .primary-controls,
+  .utility-controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   #userId,
   #difficulty,
   #loadSudoku,
-  #loadPicross {
-    width: 100%;
-  }
-
-  .utility-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
+  #loadPicross,
   #submitBtn,
   #retryBtn,
   #checkBtn,
@@ -393,5 +471,32 @@ body {
 
   .mode-btn {
     flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --sudoku-cell: clamp(31px, 9.5vw, 40px);
+    --picross-cell: clamp(25px, 7.6vw, 34px);
+    --picross-clue-width: clamp(44px, 13vw, 56px);
+  }
+
+  .panel {
+    border-radius: 18px;
+    padding: 12px;
+  }
+
+  .sudoku-grid {
+    border-width: 3px;
+    border-radius: 10px;
+  }
+
+  .block-r {
+    border-right-width: 2px;
+  }
+
+  .block-b {
+    border-bottom-width: 2px;
   }
 }

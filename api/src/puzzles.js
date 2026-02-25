@@ -1,4 +1,4 @@
-function hashString(text) {
+﻿function hashString(text) {
   let h = 2166136261;
   for (let i = 0; i < text.length; i += 1) {
     h ^= text.charCodeAt(i);
@@ -65,41 +65,159 @@ function buildSudoku(dateKey, difficulty) {
   return { puzzle, solution, blanks };
 }
 
+const PICROSS_TEMPLATES = {
+  6: [
+    {
+      title: "Heart",
+      pattern: [
+        ".##.#.",
+        "######",
+        "######",
+        ".####.",
+        "..##..",
+        "..##..",
+      ],
+    },
+    {
+      title: "Flower",
+      pattern: [
+        "..##..",
+        ".####.",
+        "######",
+        "..##..",
+        "..##..",
+        ".####.",
+      ],
+    },
+    {
+      title: "Smile",
+      pattern: [
+        "......",
+        ".#..#.",
+        "......",
+        ".#..#.",
+        "..##..",
+        ".####.",
+      ],
+    },
+  ],
+  7: [
+    {
+      title: "House",
+      pattern: [
+        "...#...",
+        "..###..",
+        ".#####.",
+        "#######",
+        "##...##",
+        "##...##",
+        "#######",
+      ],
+    },
+    {
+      title: "Rocket",
+      pattern: [
+        "...#...",
+        "..###..",
+        "..###..",
+        ".#####.",
+        ".#####.",
+        "..###..",
+        ".#...#.",
+      ],
+    },
+    {
+      title: "Diamond",
+      pattern: [
+        "...#...",
+        "..###..",
+        ".#####.",
+        "#######",
+        ".#####.",
+        "..###..",
+        "...#...",
+      ],
+    },
+  ],
+  8: [
+    {
+      title: "Crown",
+      pattern: [
+        "..####..",
+        ".######.",
+        "##.##.##",
+        "########",
+        "########",
+        ".##..##.",
+        ".##..##.",
+        "..####..",
+      ],
+    },
+    {
+      title: "Fish",
+      pattern: [
+        "...##...",
+        "..####..",
+        ".######.",
+        "########",
+        "########",
+        ".######.",
+        "..####..",
+        "...##...",
+      ],
+    },
+    {
+      title: "Bunny",
+      pattern: [
+        "##....##",
+        "##....##",
+        ".######.",
+        "..####..",
+        ".######.",
+        "##.##.##",
+        "##....##",
+        ".#....#.",
+      ],
+    },
+  ],
+};
+
+function difficultyToPicrossSize(difficulty) {
+  if (difficulty === "easy") return 6;
+  if (difficulty === "hard") return 8;
+  return 7;
+}
+
+function lineToClue(line) {
+  const groups = [];
+  let run = 0;
+
+  for (const v of line) {
+    if (v) {
+      run += 1;
+    } else if (run > 0) {
+      groups.push(run);
+      run = 0;
+    }
+  }
+
+  if (run > 0) groups.push(run);
+  return groups.length ? groups : [0];
+}
+
+function patternToGrid(pattern) {
+  return pattern.map((row) => row.split("").map((ch) => (ch === "#" ? 1 : 0)));
+}
+
 function buildPicross(dateKey, difficulty) {
+  const size = difficultyToPicrossSize(difficulty);
   const rand = makeRng(`picross:${dateKey}:${difficulty}`);
-  const size = difficulty === "hard" ? 7 : difficulty === "easy" ? 5 : 6;
-  const solution = [];
+  const templates = PICROSS_TEMPLATES[size];
+  const chosen = templates[Math.floor(rand() * templates.length)];
 
-  for (let r = 0; r < size; r += 1) {
-    const row = [];
-    for (let c = 0; c < size; c += 1) {
-      row.push(rand() < 0.5 ? 1 : 0);
-    }
-    if (row.every((v) => v === 0)) {
-      row[Math.floor(rand() * size)] = 1;
-    }
-    solution.push(row);
-  }
-
-  if (solution.every((row) => row.every((v) => v === 0))) {
-    solution[2][2] = 1;
-  }
-
-  function lineToClue(line) {
-    const groups = [];
-    let run = 0;
-    for (const v of line) {
-      if (v) run += 1;
-      else if (run > 0) {
-        groups.push(run);
-        run = 0;
-      }
-    }
-    if (run > 0) groups.push(run);
-    return groups.length ? groups : [0];
-  }
-
+  const solution = patternToGrid(chosen.pattern);
   const rowClues = solution.map(lineToClue);
+
   const colClues = [];
   for (let c = 0; c < size; c += 1) {
     const col = [];
@@ -107,7 +225,13 @@ function buildPicross(dateKey, difficulty) {
     colClues.push(lineToClue(col));
   }
 
-  return { size, rowClues, colClues, solution };
+  return {
+    size,
+    title: chosen.title,
+    rowClues,
+    colClues,
+    solution,
+  };
 }
 
 function getDailyPuzzle(mode, dateKey, difficulty = "medium") {
@@ -128,7 +252,12 @@ function getDailyPuzzle(mode, dateKey, difficulty = "medium") {
     mode,
     date: dateKey,
     difficulty,
-    puzzle: { size: picross.size, rowClues: picross.rowClues, colClues: picross.colClues },
+    puzzle: {
+      size: picross.size,
+      title: picross.title,
+      rowClues: picross.rowClues,
+      colClues: picross.colClues,
+    },
     solution: picross.solution,
     meta: { size: picross.size, difficulty },
   };

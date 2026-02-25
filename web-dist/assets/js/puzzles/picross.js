@@ -25,7 +25,7 @@ export function renderPicrossBoard(root, puzzle, options = {}) {
   const board = document.createElement("div");
   board.className = "picross";
   board.dataset.inputMode = options.inputMode || "fill";
-  const gridTemplate = `56px repeat(${puzzle.size}, var(--picross-cell))`;
+  const gridTemplate = `var(--picross-clue-width) repeat(${puzzle.size}, var(--picross-cell))`;
 
   const colClue = document.createElement("div");
   colClue.className = "clues-row";
@@ -38,7 +38,11 @@ export function renderPicrossBoard(root, puzzle, options = {}) {
   for (let c = 0; c < puzzle.size; c += 1) {
     const el = document.createElement("div");
     el.className = "picross-col-clue";
-    el.textContent = puzzle.colClues[c].join("\n");
+    puzzle.colClues[c].forEach((num) => {
+      const line = document.createElement("span");
+      line.textContent = String(num);
+      el.appendChild(line);
+    });
     colClue.appendChild(el);
   }
   board.appendChild(colClue);

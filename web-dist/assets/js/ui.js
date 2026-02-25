@@ -1,6 +1,7 @@
 ﻿export const dom = {
   board: document.getElementById("board"),
   boardWrap: document.getElementById("boardWrap"),
+  sudokuPopup: document.getElementById("sudokuPopup"),
   status: document.getElementById("status"),
   modeInfo: document.getElementById("modeInfo"),
   timer: document.getElementById("timer"),
@@ -13,7 +14,6 @@
   retry: document.getElementById("retryBtn"),
   check: document.getElementById("checkBtn"),
   clear: document.getElementById("clearBtn"),
-  sudokuPad: document.getElementById("sudokuPad"),
   picrossTools: document.getElementById("picrossTools"),
   fillModeBtn: document.getElementById("fillModeBtn"),
   markModeBtn: document.getElementById("markModeBtn"),

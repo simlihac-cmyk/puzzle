@@ -1,18 +1,19 @@
-﻿import * as api from "./api.js?v=20260224-15";
-import { state, setCurrentDaily } from "./state.js?v=20260224-15";
-import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260224-15";
+﻿import * as api from "./api.js?v=20260225-02";
+import { state, setCurrentDaily } from "./state.js?v=20260225-02";
+import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260225-02";
 import {
   renderSudokuBoard,
   collectSudokuAnswer,
-  setSelectedSudokuValue,
   clearSudokuInputs,
-} from "./puzzles/sudoku.js?v=20260224-15";
+  hasMultipleSudokuNotes,
+  getSudokuInputStats,
+} from "./puzzles/sudoku.js?v=20260225-02";
 import {
   renderPicrossBoard,
   collectPicrossAnswer,
   setPicrossInputMode,
   clearPicrossBoard,
-} from "./puzzles/picross.js?v=20260224-15";
+} from "./puzzles/picross.js?v=20260225-02";
 
 let timerHandle = null;
 
@@ -52,31 +53,10 @@ function startTimer() {
 
 function setModeUI(mode) {
   const isSudoku = mode === "sudoku";
-  dom.sudokuPad.classList.toggle("hidden", !isSudoku);
   dom.picrossTools.classList.toggle("hidden", isSudoku);
+  dom.sudokuPopup.classList.toggle("hidden", true);
   if (!isSudoku) {
     setPicrossModeButtons(state.picrossInputMode);
-  }
-}
-
-function ensureSudokuPad() {
-  if (dom.sudokuPad.children.length > 0) return;
-
-  const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, "erase"];
-  for (const value of values) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "secondary";
-
-    if (value === "erase") {
-      button.textContent = "Erase";
-      button.addEventListener("click", () => setSelectedSudokuValue(dom.board, ""));
-    } else {
-      button.textContent = String(value);
-      button.addEventListener("click", () => setSelectedSudokuValue(dom.board, value));
-    }
-
-    dom.sudokuPad.appendChild(button);
   }
 }
 
@@ -86,20 +66,23 @@ function setBoardInfo(text) {
 
 function renderBoardForMode(daily) {
   dom.board.innerHTML = "";
+  dom.sudokuPopup.innerHTML = "";
+  dom.sudokuPopup.classList.add("hidden");
 
   if (daily.mode === "sudoku") {
     renderSudokuBoard(dom.board, daily.puzzle, {
-      onBoardChanged: ({ filled, totalEditable, conflicts }) => {
-        setBoardInfo(`Sudoku progress: ${filled}/${totalEditable} | conflicts: ${conflicts}`);
+      onBoardChanged: ({ singles, multi, empty, conflicts, totalEditable }) => {
+        setBoardInfo(`Sudoku progress: single=${singles}, memo=${multi}, empty=${empty} / ${totalEditable} | conflicts: ${conflicts}`);
       },
     });
     return;
   }
 
+  const hint = daily.puzzle.title ? `Hint: ${daily.puzzle.title}` : "";
   renderPicrossBoard(dom.board, daily.puzzle, {
     inputMode: state.picrossInputMode,
     onBoardChanged: ({ filled, total }) => {
-      setBoardInfo(`Picross progress: ${filled}/${total} filled`);
+      setBoardInfo(`${hint} | Picross progress: ${filled}/${total} filled`);
     },
   });
 }
@@ -119,9 +102,10 @@ async function loadMode(mode) {
     rememberDifficulty(difficulty);
 
     if (mode === "picross") {
-      setStatus(`Loaded: ${mode} ${difficulty} (${data.daily.date}) - Fill/Mark mode available`);
+      const hint = data.daily.puzzle.title ? ` | hint: ${data.daily.puzzle.title}` : "";
+      setStatus(`Loaded: ${mode} ${difficulty} (${data.daily.date})${hint}`);
     } else {
-      setStatus(`Loaded: ${mode} ${difficulty} (${data.daily.date}) - use keypad for fast input`);
+      setStatus(`Loaded: ${mode} ${difficulty} (${data.daily.date}) - tap a cell, choose 1~9 notes, tap outside to close`);
     }
   } catch (err) {
     setStatus(`Load failed: ${err.message}`);
@@ -139,6 +123,11 @@ function currentAnswer() {
 async function submitCurrent() {
   if (!state.current) {
     setStatus("Load a puzzle first.");
+    return;
+  }
+
+  if (state.current.mode === "sudoku" && hasMultipleSudokuNotes(dom.board)) {
+    setStatus("Submit blocked: at least one Sudoku cell still has multiple notes.");
     return;
   }
 
@@ -186,11 +175,11 @@ function checkCurrentBoard() {
     return;
   }
 
-  const answer = currentAnswer();
   if (state.currentMode === "sudoku") {
-    const filled = answer.flat().filter((v) => Number(v) > 0).length;
-    setStatus(`Sudoku check: ${filled}/81 cells entered.`);
+    const s = getSudokuInputStats(dom.board);
+    setStatus(`Sudoku check: single=${s.singles}, memo=${s.multi}, empty=${s.empty}, conflicts=${s.conflicts}`);
   } else {
+    const answer = currentAnswer();
     const filled = answer.flat().filter((v) => Number(v) === 1).length;
     const total = state.current.puzzle.size * state.current.puzzle.size;
     setStatus(`Picross check: ${filled}/${total} cells filled.`);
@@ -224,7 +213,6 @@ dom.difficulty?.addEventListener("change", () => {
 
 async function bootstrap() {
   try {
-    ensureSudokuPad();
     setModeUI("sudoku");
 
     if (typeof api.resolveApiBase === "function") {
@@ -247,4 +235,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-
