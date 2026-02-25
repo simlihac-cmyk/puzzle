@@ -1,19 +1,19 @@
-﻿import * as api from "./api.js?v=20260225-05";
-import { state, setCurrentDaily } from "./state.js?v=20260225-05";
-import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260225-05";
+import * as api from "./api.js?v=20260225-06";
+import { state, setCurrentDaily } from "./state.js?v=20260225-06";
+import { dom, setStatus, setModeInfo, setTimer, setPicrossModeButtons, renderLeaderboard } from "./ui.js?v=20260225-06";
 import {
   renderSudokuBoard,
   collectSudokuAnswer,
   clearSudokuInputs,
   hasMultipleSudokuNotes,
   getSudokuInputStats,
-} from "./puzzles/sudoku.js?v=20260225-05";
+} from "./puzzles/sudoku.js?v=20260225-06";
 import {
   renderPicrossBoard,
   collectPicrossAnswer,
   setPicrossInputMode,
   clearPicrossBoard,
-} from "./puzzles/picross.js?v=20260225-05";
+} from "./puzzles/picross.js?v=20260225-06";
 
 let timerHandle = null;
 let picrossEndState = "";
@@ -74,18 +74,18 @@ function renderBoardForMode(daily) {
     renderSudokuBoard(dom.board, daily.puzzle, {
       onBoardChanged: ({ multi, empty, conflicts }) => {
         if (multi > 0) {
-          setBoardInfo(`硫붾え 移?${multi}媛??⑥쓬 (?쒖텧 遺덇?)`);
+          setBoardInfo(`Memo cells: ${multi} (cannot submit)`);
           return;
         }
         if (conflicts > 0) {
-          setBoardInfo(`以묐났 ?レ옄 ${conflicts}媛??섏젙 ?꾩슂`);
+          setBoardInfo(`Conflicts: ${conflicts}`);
           return;
         }
         if (empty > 0) {
-          setBoardInfo(`鍮?移?${empty}媛?);
+          setBoardInfo(`Empty cells: ${empty}`);
           return;
         }
-        setBoardInfo("?쒖텧 媛??);
+        setBoardInfo("Ready to submit");
       },
     });
     return;
@@ -97,21 +97,21 @@ function renderBoardForMode(daily) {
   renderPicrossBoard(dom.board, daily.puzzle, {
     inputMode: state.picrossInputMode,
     onBoardChanged: ({ filled, target, lives, maxLives, gameOver, solved }) => {
-      setBoardInfo(`?뚰듃: ${hint} | ?쇱씠??${lives}/${maxLives} | ${filled}/${target}`);
+      setBoardInfo(`Hint: ${hint} | Lives ${lives}/${maxLives} | ${filled}/${target}`);
 
       if (solved && picrossEndState !== "solved") {
         picrossEndState = "solved";
-        setStatus("?쇳겕濡쒖뒪 ?대━??");
+        setStatus("Picross clear");
       } else if (gameOver && lives <= 0 && picrossEndState !== "gameover") {
         picrossEndState = "gameover";
-        setStatus("寃뚯엫 ?ㅻ쾭 (?쇱씠??0) - ?ㅼ떆 遺덈윭?ㅺ린濡??щ룄??);
+        setStatus("Game over - reload to retry");
       }
     },
   });
 }
 
 async function loadMode(mode) {
-  setStatus("遺덈윭?ㅻ뒗 以?..");
+  setStatus("Loading...");
   const difficulty = currentDifficulty();
 
   try {
@@ -123,9 +123,9 @@ async function loadMode(mode) {
     startTimer();
     rememberMode(mode);
     rememberDifficulty(difficulty);
-    setStatus(mode === "picross" ? "?쇳겕濡쒖뒪 以鍮??꾨즺" : "?ㅻ룄荑?以鍮??꾨즺");
+    setStatus(mode === "picross" ? "Picross ready" : "Sudoku ready");
   } catch (err) {
-    setStatus(`遺덈윭?ㅺ린 ?ㅽ뙣: ${err.message}`);
+    setStatus(`Load failed: ${err.message}`);
   }
 }
 
@@ -137,12 +137,12 @@ function currentAnswer() {
 
 async function submitCurrent() {
   if (!state.current) {
-    setStatus("癒쇱? ?쇱쫹??遺덈윭?ㅼ꽭??");
+    setStatus("Load a puzzle first");
     return;
   }
 
   if (state.current.mode === "sudoku" && hasMultipleSudokuNotes(dom.board)) {
-    setStatus("?쒖텧 遺덇?: 硫붾え 移몄쓣 紐⑤몢 ?뺣━?섏꽭??");
+    setStatus("Submit blocked: remove memo cells");
     return;
   }
 
@@ -157,45 +157,45 @@ async function submitCurrent() {
       answer: currentAnswer(),
     });
 
-    if (data.result.correct) setStatus(`?뺣떟! ?먯닔 ${data.result.score}, ${data.result.seconds}珥?);
-    else setStatus(`?ㅻ떟: ${data.result.reason}`);
+    if (data.result.correct) setStatus(`Correct: ${data.result.score} pts, ${data.result.seconds}s`);
+    else setStatus(`Wrong: ${data.result.reason}`);
 
     renderLeaderboard(data.leaderboard);
   } catch (err) {
-    setStatus(`?쒖텧 ?ㅽ뙣: ${err.message}`);
+    setStatus(`Submit failed: ${err.message}`);
   }
 }
 
 function clearCurrentBoard() {
   if (!state.currentMode) {
-    setStatus("癒쇱? ?쇱쫹??遺덈윭?ㅼ꽭??");
+    setStatus("Load a puzzle first");
     return;
   }
 
   if (state.currentMode === "sudoku") {
     clearSudokuInputs(dom.board);
-    setStatus("?ㅻ룄荑?珥덇린???꾨즺");
+    setStatus("Sudoku cleared");
   } else {
     clearPicrossBoard(dom.board);
     renderBoardForMode(state.current);
-    setStatus("?쇳겕濡쒖뒪 珥덇린???꾨즺");
+    setStatus("Picross cleared");
   }
 }
 
 function checkCurrentBoard() {
   if (!state.currentMode) {
-    setStatus("癒쇱? ?쇱쫹??遺덈윭?ㅼ꽭??");
+    setStatus("Load a puzzle first");
     return;
   }
 
   if (state.currentMode === "sudoku") {
     const s = getSudokuInputStats(dom.board);
-    setStatus(`?ㅻ룄荑??뺤씤: 硫붾え ${s.multi}, 鍮덉뭏 ${s.empty}, 異⑸룎 ${s.conflicts}`);
+    setStatus(`Check: memo ${s.multi}, empty ${s.empty}, conflicts ${s.conflicts}`);
   } else {
     const answer = currentAnswer();
     const filled = answer.flat().filter((v) => Number(v) === 1).length;
     const total = state.current.puzzle.size * state.current.puzzle.size;
-    setStatus(`?쇳겕濡쒖뒪 ?뺤씤: ${filled}/${total}`);
+    setStatus(`Check: ${filled}/${total}`);
   }
 }
 
@@ -203,7 +203,7 @@ function setPicrossMode(mode) {
   state.picrossInputMode = mode;
   setPicrossInputMode(dom.board, mode);
   setPicrossModeButtons(mode);
-  setStatus(mode === "fill" ? "?쇳겕濡쒖뒪 梨꾩슦湲?紐⑤뱶" : "?쇳겕濡쒖뒪 X?쒖떆 紐⑤뱶");
+  setStatus(mode === "fill" ? "Picross fill mode" : "Picross mark mode");
 }
 
 dom.loadSudoku.addEventListener("click", () => loadMode("sudoku"));
@@ -211,7 +211,7 @@ dom.loadPicross.addEventListener("click", () => loadMode("picross"));
 dom.submit.addEventListener("click", submitCurrent);
 dom.retry.addEventListener("click", () => {
   if (state.currentMode) loadMode(state.currentMode);
-  else setStatus("紐⑤뱶瑜?癒쇱? ?좏깮?섏꽭??");
+  else setStatus("Choose a mode first");
 });
 dom.check.addEventListener("click", checkCurrentBoard);
 dom.clear.addEventListener("click", clearCurrentBoard);
@@ -236,10 +236,10 @@ async function bootstrap() {
     if (mode === "sudoku" || mode === "picross") {
       await loadMode(mode);
     } else {
-      setStatus("紐⑤뱶瑜??좏깮???쒖옉?섏꽭??");
+      setStatus("Choose a mode to start");
     }
   } catch (err) {
-    setStatus(`?곌껐 ?ㅽ뙣: ${err.message}`);
+    setStatus(`Connection failed: ${err.message}`);
   }
 }
 
