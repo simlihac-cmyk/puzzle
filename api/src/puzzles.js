@@ -257,6 +257,7 @@ function getDailyPuzzle(mode, dateKey, difficulty = "medium") {
       title: picross.title,
       rowClues: picross.rowClues,
       colClues: picross.colClues,
+      solution: picross.solution,
     },
     solution: picross.solution,
     meta: { size: picross.size, difficulty },

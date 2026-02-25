@@ -291,7 +291,8 @@ body {
   width: min(250px, 88vw);
   border-radius: 16px;
   border: 1px solid #f6b9a8;
-  background: linear-gradient(180deg, #fff8f4 0%, #fff 100%);
+  background: linear-gradient(180deg, rgba(255, 248, 244, 0.84) 0%, rgba(255, 255, 255, 0.76) 100%);
+  backdrop-filter: blur(10px) saturate(1.05);
   box-shadow: 0 14px 30px rgba(95, 38, 24, 0.22);
   padding: 9px;
 }
@@ -407,6 +408,26 @@ body {
 .picross-cell.mark {
   background: #fff3f4;
   color: #c53357;
+}
+
+.picross-cell.error {
+  animation: picross-error 0.22s ease;
+  border-color: #d72d53;
+}
+
+@keyframes picross-error {
+  0% {
+    transform: scale(1);
+    background: #ffd8e3;
+  }
+  50% {
+    transform: scale(0.94);
+    background: #ffc7d7;
+  }
+  100% {
+    transform: scale(1);
+    background: #fff3f4;
+  }
 }
 
 .picross-tools {
