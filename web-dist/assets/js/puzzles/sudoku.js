@@ -157,7 +157,19 @@ function notify(board, onBoardChanged) {
 }
 
 function createPopup(root, board, onBoardChanged) {
-  const popup = root.querySelector("#sudokuPopup");
+  const popup =
+    root.closest(".board-panel")?.querySelector("#sudokuPopup") ||
+    document.getElementById("sudokuPopup");
+
+  if (!popup) {
+    return {
+      openFor(cell) {
+        selectCell(board, cell);
+      },
+      dispose() {},
+    };
+  }
+
   popup.innerHTML = "";
   popup.classList.add("hidden");
 
